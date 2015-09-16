@@ -1608,6 +1608,7 @@
       <depends_on name="Python-2.7.10" optional="False"/>
       <build type="make" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="patch" value="$SRCDIR/../ryu.patch"/>
         <attribute name="no_installation" value="True"/>
         <attribute name="post_installation" value="cp $SRCDIR/bin/ryu-manager $SRCDIR/../ns-3-dce/files-0/ ; cp -r $SRCDIR/* $SRCDIR/../ns-3-dce/files-0/"/>
       </build>

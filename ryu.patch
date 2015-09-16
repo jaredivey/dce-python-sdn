@@ -1,0 +1,12 @@
+diff --git a/ryu/lib/hub.py b/ryu/lib/hub.py
+index 5621147..d056f5b 100644
+--- a/ryu/lib/hub.py
++++ b/ryu/lib/hub.py
+@@ -27,6 +27,7 @@ LOG = logging.getLogger('ryu.lib.hub')
+ 
+ if HUB_TYPE == 'eventlet':
+     import eventlet
++    eventlet.hubs.use_hub("poll")
+     import eventlet.event
+     import eventlet.queue
+     import eventlet.semaphore
