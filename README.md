@@ -32,7 +32,7 @@ a. It is recommended that a VM be used for testing and experimenting, particular
   cd dce-python-sdn
   bake.py configure -c bakeconf-sdn.xml -e dce-python-sdn
   bake.py download
-  sudo python ../bake/bake.py build
+  sudo python ../bake/bake.py build # Elevated privileges are required for libfluid installation only
   ```
 
 5. Go to the ns-3-dce directory and run an example script to test:
