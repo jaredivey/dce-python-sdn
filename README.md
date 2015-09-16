@@ -16,7 +16,10 @@ It is recommended that a VM be used for testing and experimenting, particularly 
 1. Install ns-3 prerequisites:
   https://www.nsnam.org/wiki/Installation
 
-2. Install libfluid prerequisites (debian package names provided): autoconf libtool build-essential pkg-config libevent-dev libssl-dev
+2. Install libfluid prerequisites (debian package names provided):
+  ```
+  autoconf libtool build-essential pkg-config libevent-dev libssl-dev
+  ```
 
 3. Get bake:
   ```
