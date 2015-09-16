@@ -1,0 +1,35 @@
+diff --git a/fluid/of10/of10action.hh b/fluid/of10/of10action.hh
+index 7c2ea40..b79e00b 100644
+--- a/fluid/of10/of10action.hh
++++ b/fluid/of10/of10action.hh
+@@ -219,7 +219,7 @@ public:
+     virtual SetTPSrcAction* clone() {
+         return new SetTPSrcAction(*this);
+     }
+-    IPAddress tp_port() {
++    uint16_t tp_port() {
+         return this->tp_port_;
+     }
+     void tp_port(uint16_t tp_port) {
+@@ -241,7 +241,7 @@ public:
+     virtual SetTPDstAction* clone() {
+         return new SetTPDstAction(*this);
+     }
+-    IPAddress tp_port() {
++    uint16_t tp_port() {
+         return this->tp_port_;
+     }
+     void tp_port(uint16_t tp_port) {
+diff --git a/fluid/util/util.h b/fluid/util/util.h
+index cbd3e4d..341cfbc 100644
+--- a/fluid/util/util.h
++++ b/fluid/util/util.h
+@@ -65,7 +65,7 @@
+ 
+ #define NO_RETURN __attribute__((__noreturn__))
+ #define UNUSED __attribute__((__unused__))
+-#define PACKED __attribute__((__packed__))
++//#define PACKED __attribute__((__packed__))
+ #define PRINTF_FORMAT(FMT, ARG1) __attribute__((__format__(printf, FMT, ARG1)))
+ #define STRFTIME_FORMAT(FMT) __attribute__((__format__(__strftime__, FMT, 0)))
+ #define MALLOC_LIKE __attribute__((__malloc__))

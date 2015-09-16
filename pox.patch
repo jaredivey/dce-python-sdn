@@ -1,0 +1,27 @@
+diff --git a/pox/core.py b/pox/core.py
+index 69427d1..97d47f9 100644
+--- a/pox/core.py
++++ b/pox/core.py
+@@ -259,14 +259,14 @@ class POXCore (EventMixin):
+     """
+     Shut down POX.
+     """
+-    import threading
+-    if (self.starting_up or
+-        threading.current_thread() is self.scheduler._thread):
+-      t = threading.Thread(target=self._quit)
+-      t.daemon = True
+-      t.start()
+-    else:
+-      self._quit()
++    #import threading
++    #if (self.starting_up or
++    #    threading.current_thread() is self.scheduler._thread):
++    #  t = threading.Thread(target=self._quit)
++    #  t.daemon = True
++    #  t.start()
++    #else:
++    #  self._quit()
+ 
+   def _quit (self):
+     # Should probably do locking here
