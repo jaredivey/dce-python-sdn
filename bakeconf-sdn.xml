@@ -1521,7 +1521,6 @@
     </module>
 
     <module name="libfluid_base">
-    <module name="libfluid">
       <source type="inline">
         <attribute name="module_directory" value="libfluid_base"/>
       </source>
