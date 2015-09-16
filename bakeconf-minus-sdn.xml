@@ -1508,6 +1508,110 @@
     </module>
 
     <!-- dce-linux openflow -->
+    <module name="libfluid">
+      <source type="git">
+          <attribute name="url" value="https://github.com/OpenNetworkingFoundation/libfluid.git"/>
+        <attribute name="module_directory" value="libfluid"/>
+      </source>
+      <build type="make" objdir="no">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="pre_installation" value="./bootstrap.sh ; mv libfluid_base ../ ; mv libfluid_msg ../"/>
+        <attribute name="no_installation" value="True"/>
+      </build>
+    </module>
+
+    <module name="libfluid_base">
+    <module name="libfluid">
+      <source type="inline">
+        <attribute name="module_directory" value="libfluid_base"/>
+      </source>
+      <depends_on name="libfluid" optional="False"/>
+      <build type="make" objdir="no">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+      </build>
+    </module>
+
+    <module name="libfluid_msg">
+      <source type="inline">
+        <attribute name="module_directory" value="libfluid_msg"/>
+      </source>
+      <build type="make" objdir="no">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="patch" value="$SRCDIR/../libfluid_msg.patch"/>
+        <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+      </build>
+    </module>
+
+    <module name="Python-2.7.10">
+      <source type="git">
+          <attribute name="url" value="https://github.com/jaredivey/Python-2.7.10.git"/>
+        <attribute name="module_directory" value="Python-2.7.10"/>
+      </source>
+      <build type="make" objdir="no">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce"/>
+      </build>
+    </module>
+
+    <module name="ns-3-sdn">
+      <source type="git">
+          <attribute name="url" value="https://github.com/jaredivey/ns-3-sdn.git"/>
+        <attribute name="module_directory" value="ns-3-dev-dce"/>
+      </source>
+      <depends_on name="netanim-dev" optional="True"/>
+      <depends_on name="pybindgen-dev" optional="True"/>
+      <depends_on name="pyviz-prerequisites" optional="True"/>
+      <depends_on name="libfluid_msg" optional="False"/>
+      <depends_on name="libfluid_base" optional="False"/>
+      <build type="waf" objdir="yes">
+        <attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --enable-tests --enable-examples --enable-mpi --enable-sdn"/>
+      </build>
+    </module>
+
+    <module name="dce-python-sdn">
+      <source type="git">
+          <attribute name="url" value="https://github.com/jaredivey/ns-3-dce.git"/>
+        <attribute name="module_directory" value="ns-3-dce"/>
+      </source>
+      <depends_on name="ns-3-sdn" optional="False"/>
+      <depends_on name="Python-2.7.10" optional="False"/>
+      <build type="waf" objdir="yes" sourcedir="ns-3-dce">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR"/>
+        <attribute name="post_installation" value="mkdir $SRCDIR/files-0 ; cp -r $INSTALLDIR/lib/python2.7/ $SRCDIR/files-0/"/>
+      </build>
+    </module>
+
+    <module name="POX">
+      <source type="git">
+          <attribute name="url" value="https://github.com/noxrepo/pox.git"/>
+        <attribute name="module_directory" value="pox"/>
+      </source>
+      <depends_on name="dce-python-sdn" optional="False"/>
+      <depends_on name="Python-2.7.10" optional="False"/>
+      <build type="make" objdir="no">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="patch" value="$SRCDIR/../pox.patch"/>
+        <attribute name="no_installation" value="True"/>
+        <attribute name="post_installation" value="cp $SRCDIR/pox.py $SRCDIR/../ns-3-dce/files-0/ ; cp -r $SRCDIR/pox $SRCDIR/../ns-3-dce/files-0/"/>
+      </build>
+    </module>
+
+    <module name="Ryu">
+      <source type="git">
+          <attribute name="url" value="https://github.com/osrg/ryu.git"/>
+        <attribute name="module_directory" value="ryu"/>
+      </source>
+      <depends_on name="dce-python-sdn" optional="False"/>
+      <depends_on name="Python-2.7.10" optional="False"/>
+      <build type="make" objdir="no">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="no_installation" value="True"/>
+        <attribute name="post_installation" value="cp $SRCDIR/bin/ryu-manager $SRCDIR/../ns-3-dce/files-0/ ; cp -r $SRCDIR/* $SRCDIR/../ns-3-dce/files-0/"/>
+      </build>
+    </module>
 
     <module name="net-next-sim">
       <source type="git">
