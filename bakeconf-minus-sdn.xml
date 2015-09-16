@@ -1566,7 +1566,7 @@
       <depends_on name="libfluid_msg" optional="False"/>
       <depends_on name="libfluid_base" optional="False"/>
       <build type="waf" objdir="yes">
-        <attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --enable-tests --enable-examples --enable-mpi --enable-sdn"/>
+        <attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --disable-python --enable-tests --enable-examples --enable-mpi --enable-sdn"/>
       </build>
     </module>
 
