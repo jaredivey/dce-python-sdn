@@ -1585,7 +1585,7 @@
     <module name="POX">
       <source type="git">
           <attribute name="url" value="https://github.com/noxrepo/pox.git"/>
-        <attribute name="revision" value="283bf8967186b55bd9cc1eea9c81d744a18cd25e"/>
+        <attribute name="revision" value="cfebf79c9abaffbebe864b9427a2e3694c04aa70"/>
         <attribute name="module_directory" value="pox"/>
       </source>
       <build type="none" objdir="no">
@@ -1598,7 +1598,7 @@
       <source type="git">
           <attribute name="url" value="https://github.com/osrg/ryu.git"/>
         <attribute name="module_directory" value="ryu"/>
-        <attribute name="revision" value="c19e0a20cdff38503fe50f64e7dc784ca5be92d2"/>
+        <attribute name="revision" value="8e7a4c6ddb12794ef33954e0ebdb8ae193fcf2e7"/>
       </source>
       <build type="none" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
