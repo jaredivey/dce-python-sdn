@@ -1516,7 +1516,7 @@
       <build type="autotools" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
 	<attribute name="pre_installation" value="$SRCDIR/autogen.sh"/>
-        <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+        <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=/usr --exec-prefix=/usr"/>
       </build>
     </module>
 
@@ -1529,7 +1529,14 @@
         <attribute name="supported_os" value="linux;linux2"/>
 	<attribute name="pre_installation" value="$SRCDIR/autogen.sh"/>
         <attribute name="patch" value="$SRCDIR/../../libfluid_msg.patch"/>
-        <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+        <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=/usr --exec-prefix=/usr"/>
+      </build>
+    </module>
+
+    <module name="libfluid">
+      <depends_on name="libfluid_base" optional="True"/>
+      <depends_on name="libfluid_msg" optional="True"/>
+      <build type="none" objdir="no">
       </build>
     </module>
 
@@ -1553,8 +1560,7 @@
       <depends_on name="netanim-dev" optional="True"/>
       <depends_on name="pybindgen-dev" optional="True"/>
       <depends_on name="pyviz-prerequisites" optional="True"/>
-      <depends_on name="libfluid_base" optional="False"/>
-      <depends_on name="libfluid_msg" optional="False"/>
+      <depends_on name="libfluid" optional="False"/>
       <build type="waf" objdir="build">
         <attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --disable-python --enable-tests --enable-examples --enable-mpi --enable-sdn"/>
       </build>
