@@ -1554,7 +1554,6 @@
       <depends_on name="netanim-dev" optional="True"/>
       <depends_on name="pybindgen-dev" optional="True"/>
       <depends_on name="pyviz-prerequisites" optional="True"/>
-      <depends_on name="libfluid" optional="False"/>
       <build type="waf" objdir="build">
         <attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --disable-python --enable-tests --enable-examples --enable-mpi --enable-sdn"/>
       </build>
@@ -1576,8 +1575,6 @@
       <depends_on name="POX" optional="False"/>
       <depends_on name="ns-3-sdn" optional="False"/>
       <depends_on name="Python-2.7.10" optional="False"/>
-      <depends_on name="libfluid_msg" optional="False"/>
-      <depends_on name="libfluid_base" optional="False"/>
       <build type="waf" objdir="build">
         <attribute name="supported_os" value="linux;linux2"/>
         <attribute name="configure_arguments" value="configure --disable-python --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR --prefix=$INSTALLDIR"/>
