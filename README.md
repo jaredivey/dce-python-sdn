@@ -38,6 +38,8 @@ It is recommended that a VM be used for testing and experimenting, particularly 
   bake.py download
   sudo ../bake/bake.py build
   rmdir build
+  rm bakefile.xml
+  rm bakeSetEnv.sh
   # Bake dce-python-sdn
   bake.py configure -c bakeconf-sdn.xml -e dce-python-sdn
   bake.py download
