@@ -1598,6 +1598,7 @@
       <source type="git">
           <attribute name="url" value="https://github.com/osrg/ryu.git"/>
         <attribute name="module_directory" value="ryu"/>
+        <attribute name="revision" value="5021716be31fcdac44bdacb0fa785416227ac394"/>
       </source>
       <build type="none" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
