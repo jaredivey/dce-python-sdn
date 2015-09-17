@@ -37,6 +37,7 @@ It is recommended that a VM be used for testing and experimenting, particularly 
   bake.py configure -c bakeconf-sdn.xml -e libfluid
   bake.py download
   sudo ../bake/bake.py build
+  rmdir build
   # Bake dce-python-sdn
   bake.py configure -c bakeconf-sdn.xml -e dce-python-sdn
   bake.py download
