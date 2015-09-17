@@ -29,7 +29,7 @@ It is recommended that a VM be used for testing and experimenting, particularly 
   export PYTHONPATH=$PYTHONPATH:$BAKE_HOME
   ```
 
-1. Get dce-python-sdn (Add -vvv to the last two instructions if problems occur during installation):
+1. Get dce-python-sdn (Add -vvv to the download and build instructions if problems occur during installation):
   ```
   git clone https://github.com/jaredivey/dce-python-sdn
   cd dce-python-sdn
