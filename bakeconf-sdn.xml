@@ -1516,7 +1516,7 @@
       <build type="autotools" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
 	<attribute name="pre_installation" value="$SRCDIR/autogen.sh"/>
-        <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=/usr --exec-prefix=/usr"/>
+        <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
       </build>
     </module>
 
@@ -1529,7 +1529,7 @@
         <attribute name="supported_os" value="linux;linux2"/>
 	<attribute name="pre_installation" value="$SRCDIR/autogen.sh"/>
         <attribute name="patch" value="$SRCDIR/../../libfluid_msg.patch"/>
-        <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=/usr --exec-prefix=/usr"/>
+        <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
       </build>
     </module>
 
@@ -1541,21 +1541,21 @@
       <build type="autotools" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
         <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
-        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce"/>
+        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10"/>
       </build>
     </module>
 
     <module name="ns-3-sdn">
       <source type="git">
           <attribute name="url" value="https://github.com/jaredivey/ns-3-sdn.git"/>
-        <attribute name="module_directory" value="ns-3-dev-dce"/>
+        <attribute name="module_directory" value="ns-3-sdn"/>
       </source>
       <depends_on name="netanim-dev" optional="True"/>
       <depends_on name="pybindgen-dev" optional="True"/>
       <depends_on name="pyviz-prerequisites" optional="True"/>
       <depends_on name="libfluid_base" optional="False"/>
       <depends_on name="libfluid_msg" optional="False"/>
-      <build type="waf" objdir="yes">
+      <build type="waf" objdir="build">
         <attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --disable-python --enable-tests --enable-examples --enable-mpi --enable-sdn"/>
       </build>
     </module>
@@ -1565,16 +1565,23 @@
           <attribute name="url" value="https://github.com/jaredivey/ns-3-dce.git"/>
         <attribute name="module_directory" value="ns-3-dce"/>
       </source>
+      <!-- usual DCE dependencies -->
+      <depends_on name="elf-loader" optional="True"/>
+      <depends_on name="libaspect" optional="True"/>
+      <depends_on name="iperf" optional="True"/>
+      <depends_on name="wget" optional="True"/>
+      <depends_on name="thttpd" optional="True"/>
+      <!-- SDN dependencies -->
       <depends_on name="Ryu" optional="False"/>
       <depends_on name="POX" optional="False"/>
       <depends_on name="ns-3-sdn" optional="False"/>
       <depends_on name="Python-2.7.10" optional="False"/>
       <depends_on name="libfluid_msg" optional="False"/>
       <depends_on name="libfluid_base" optional="False"/>
-      <build type="waf" objdir="yes" sourcedir="ns-3-dce">
+      <build type="waf" objdir="build">
         <attribute name="supported_os" value="linux;linux2"/>
-        <attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --disable-python --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR"/>
-        <attribute name="post_installation" value="mkdir $SRCDIR/files-0 ; cp -r $INSTALLDIR/lib/python2.7/ $SRCDIR/files-0/ ; cp $SRCDIR../pox/pox.py $SRCDIR/files-0/ ; cp -r $SRCDIR/../pox $SRCDIR/files-0/ ; cp $SRCDIR/../ryu/bin/ryu-manager $SRCDIR/files-0/ ; cp -r $SRCDIR/../ryu/* $SRCDIR/files-0/"/>
+        <attribute name="configure_arguments" value="configure --disable-python --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR --prefix=$INSTALLDIR"/>
+        <attribute name="post_installation" value="mkdir $SRCDIR/files-0 ; ln -s $INSTALLDIR/lib/python2.7 $SRCDIR/files-0/ ; cp $SRCDIR../pox/pox.py $SRCDIR/files-0/ ; cp -r $SRCDIR/../pox $SRCDIR/files-0/ ; cp $SRCDIR/../ryu/bin/ryu-manager $SRCDIR/files-0/ ; cp -r $SRCDIR/../ryu/* $SRCDIR/files-0/"/>
       </build>
     </module>
 
