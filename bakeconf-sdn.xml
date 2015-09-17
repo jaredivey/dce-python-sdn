@@ -1585,7 +1585,7 @@
     <module name="POX">
       <source type="git">
           <attribute name="url" value="https://github.com/noxrepo/pox.git"/>
-        <attribute name="revision" value="bab636bc89584b3bb2baaa5bc766be82fb81d1b2"/>
+        <attribute name="revision" value="cfebf79c9abaffbebe864b9427a2e3694c04aa70"/>
         <attribute name="module_directory" value="pox"/>
       </source>
       <build type="none" objdir="no">
