@@ -33,13 +33,18 @@ It is recommended that a VM be used for testing and experimenting, particularly 
   ```
   git clone https://github.com/jaredivey/dce-python-sdn
   cd dce-python-sdn
+  # Bake libfluid with elevated privileges
+  bake.py configure -c bakeconf-sdn.xml -e libfluid
+  bake.py download
+  sudo ../bake/bake.py build
+  # Bake dce-python-sdn
   bake.py configure -c bakeconf-sdn.xml -e dce-python-sdn
   bake.py download
-  sudo python ../bake/bake.py build # Elevated privileges are required for libfluid installation only
+  bake.py build
   ```
 
 1. Go to the ns-3-dce directory and run an example script to test:
   ```
   cd source/ns-3-dce
-  ./waf --run dce-python-sdn
+  ./waf --run "dce-python-sdn --numSwitches=2"
   ```
