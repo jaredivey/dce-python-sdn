@@ -1,3 +1,16 @@
+diff --git a/ryu/controller/controller.py b/ryu/controller/controller.py
+index 577c6da..1e199b6 100644
+--- a/ryu/controller/controller.py
++++ b/ryu/controller/controller.py
+@@ -111,7 +111,7 @@ class Datapath(ofproto_protocol.ProtocolDesc):
+         super(Datapath, self).__init__()
+ 
+         self.socket = socket
+-        self.socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
++        #self.socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1)
+         self.address = address
+         self.is_active = True
+ 
 diff --git a/ryu/lib/hub.py b/ryu/lib/hub.py
 index 5621147..d056f5b 100644
 --- a/ryu/lib/hub.py
