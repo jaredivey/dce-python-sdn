@@ -1551,7 +1551,7 @@
           <attribute name="url" value="https://github.com/jaredivey/ns-3-sdn.git"/>
         <attribute name="module_directory" value="ns-3-sdn"/>
       </source>
-      <depends_on name="netanim-dev" optional="True"/>
+      <depends_on name="netanim-3.105" optional="True"/>
       <depends_on name="pybindgen-dev" optional="True"/>
       <depends_on name="pyviz-prerequisites" optional="True"/>
       <build type="waf" objdir="build">
