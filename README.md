@@ -18,7 +18,12 @@ It is recommended that a VM be used for testing and experimenting, particularly 
 
 1. Install libfluid prerequisites (debian package names provided):
   ```
-  autoconf libtool build-essential pkg-config libevent-dev libssl-dev
+  sudo apt-get install autoconf libtool build-essential pkg-config libevent-dev libssl-dev
+  ```
+  
+1. Install readline library (for Python):
+  ```
+  sudo apt-get install libreadline-dev
   ```
 
 1. Get bake:

@@ -1551,7 +1551,7 @@
           <attribute name="url" value="https://github.com/jaredivey/ns-3-sdn.git"/>
         <attribute name="module_directory" value="ns-3-sdn"/>
       </source>
-      <depends_on name="netanim-dev" optional="True"/>
+      <depends_on name="netanim-3.105" optional="True"/>
       <depends_on name="pybindgen-dev" optional="True"/>
       <depends_on name="pyviz-prerequisites" optional="True"/>
       <build type="waf" objdir="build">
@@ -1577,7 +1577,7 @@
       <depends_on name="Python-2.7.10" optional="False"/>
       <build type="waf" objdir="build">
         <attribute name="supported_os" value="linux;linux2"/>
-        <attribute name="configure_arguments" value="configure --disable-python --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR --prefix=$INSTALLDIR"/>
+        <attribute name="configure_arguments" value="configure --enable-mpi --disable-python --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR --prefix=$INSTALLDIR"/>
         <attribute name="post_installation" value="mkdir $SRCDIR/files-0 ; ln -s $INSTALLDIR/lib/python2.7 $SRCDIR/files-0/ ; cp -r $SRCDIR/../pox $SRCDIR/files-0/ ; cp $SRCDIR/../ryu/bin/ryu-manager $SRCDIR/files-0/ ; cp -r $SRCDIR/../ryu/ryu $SRCDIR/files-0/; cp -r $SRCDIR/../ryu/etc $SRCDIR/files-0/"/>
       </build>
     </module>
