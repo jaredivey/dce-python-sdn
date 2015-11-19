@@ -23,3 +23,17 @@ index 5621147..d056f5b 100644
      import eventlet.event
      import eventlet.queue
      import eventlet.semaphore
+diff --git a/ryu/lib/stplib.py b/ryu/lib/stplib.py
+index fd17b2a..7cd94bb 100644
+--- a/ryu/lib/stplib.py
++++ b/ryu/lib/stplib.py
+@@ -508,7 +508,8 @@ class Bridge(object):
+             """ Receive Rst BPDU. """
+             # TODO: RSTP
+             pass
+-
++        elif in_port.state == PORT_STATE_BLOCK: 
++            return
+         else:
+             """ Receive non BPDU packet.
+                  throw EventPacketIn. """
