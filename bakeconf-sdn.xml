@@ -774,6 +774,17 @@
       </build>
     </module>
 
+    <module name="pybindgen-0.17.0.886">
+      <source type="bazaar">
+	<attribute name="url" value="https://launchpad.net/pybindgen"/>
+	<attribute name="revision" value="revno:886"/>
+      </source>
+      <build type="waf" objdir="yes">
+	<attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR"/>
+	<attribute name="build_arguments" value="--generate-version"/>
+      </build>
+    </module>
+
     <module name="g++">
       <source type="system_dependency">
         <attribute name="dependency_test" value="g\+\+"/>
@@ -876,6 +887,32 @@
       </source>
       <build type="none" objdir="no">
       </build>
+    </module>
+
+    <module name="libc">
+        <source type="system_dependency">
+            <attribute name="post_download" value="" />
+            <attribute name="try_to_install" value="false" />
+            <attribute name="new_variable" value="" />
+            <attribute name="patch" value="" />
+            <attribute name="name_yum" value="glibc" />
+            <attribute name="more_information" value="Didn't find:   libc package; please install it." />
+            <attribute name="name_apt-get" value="libc6" />
+            <attribute name="module_directory" value="" />
+            <attribute name="file_test" value="/usr/lib/ld-linux.so.2 or /lib/ld-linux.so.2" />
+        </source>
+        <build type="none"><attribute name="v_LD_LIBRARY" value="" />
+            <attribute name="ignore_predefined_flags" value="False" />
+            <attribute name="pre_installation" value="" />
+            <attribute name="patch" value="" />
+            <attribute name="supported_os" value="" />
+            <attribute name="v_PATH" value="" />
+            <attribute name="no_installation" value="" />
+            <attribute name="new_variable" value="" />
+            <attribute name="objdir" value="no" />
+            <attribute name="post_installation" value="" />
+            <attribute name="v_PKG_CONFIG" value="" />
+        </build>
     </module>
 
     <module name="libc-debug">
@@ -1534,7 +1571,7 @@
       </build>
     </module>
 
-    <module name="Python-2.7.10">
+    <module built_once="True" name="Python-2.7.10">
       <source type="git">
           <attribute name="url" value="https://github.com/jaredivey/Python-2.7.10.git"/>
         <attribute name="module_directory" value="Python-2.7.10"/>
@@ -1552,16 +1589,219 @@
         <attribute name="module_directory" value="ns-3-sdn"/>
       </source>
       <depends_on name="netanim-3.105" optional="True"/>
-      <depends_on name="pybindgen-dev" optional="True"/>
+      <depends_on name="pybindgen-0.17.0.886" optional="True"/>
       <depends_on name="pyviz-prerequisites" optional="True"/>
       <build type="waf" objdir="build">
-        <attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --disable-python --enable-tests --enable-examples --enable-mpi --enable-sdn"/>
+        <attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --enable-tests --enable-examples --enable-mpi --enable-sdn"/>
       </build>
     </module>
 
     <module name="dce-python-sdn">
       <source type="git">
           <attribute name="url" value="https://github.com/jaredivey/ns-3-dce.git"/>
+        <attribute name="module_directory" value="ns-3-dce"/>
+      </source>
+      <!-- usual DCE dependencies -->
+      <depends_on name="elf-loader" optional="True"/>
+      <depends_on name="libaspect" optional="True"/>
+      <depends_on name="iperf" optional="True"/>
+      <depends_on name="wget" optional="True"/>
+      <depends_on name="thttpd" optional="True"/>
+      <depends_on name="ccnx" optional="True"/>
+      <!-- SDN dependencies -->
+      <depends_on name="Ryu" optional="False"/>
+      <depends_on name="POX" optional="False"/>
+      <depends_on name="ns-3-sdn" optional="False"/>
+      <depends_on name="net-next-sim-2.6.36" optional="False"/>
+      <depends_on name="Python-2.7.10" optional="False"/>
+      <depends_on name="iproute-2.6.38-fix-01" optional="False"/>
+      <depends_on name="bash" optional="True"/>
+      <build type="waf" objdir="build">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="configure_arguments" value="configure --enable-mpi --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR --enable-kernel-stack=$SRCDIR/../net-next-sim-2.6.36/arch --prefix=$INSTALLDIR"/>
+        <attribute name="post_installation" value="mkdir $SRCDIR/files-0 ; ln -s $INSTALLDIR/lib/python2.7 $SRCDIR/files-0/ ; cp -r $SRCDIR/../pox $SRCDIR/files-0/ ; cp $SRCDIR/../ryu/bin/ryu-manager $SRCDIR/files-0/ ; cp -r $SRCDIR/../ryu/ryu $SRCDIR/files-0/; cp -r $SRCDIR/../ryu/etc $SRCDIR/files-0/"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="iproute-2.6.38-fix-01">
+        <installed value="/home/jared/dce/build/etc/iproute2/ematch_map" />
+        <installed value="/home/jared/dce/build/etc/iproute2/rt_dsfield" />
+        <installed value="/home/jared/dce/build/etc/iproute2/rt_protos" />
+        <installed value="/home/jared/dce/build/etc/iproute2/rt_realms" />
+        <installed value="/home/jared/dce/build/etc/iproute2/rt_scopes" />
+        <installed value="/home/jared/dce/build/etc/iproute2/rt_tables" />
+        <installed value="/home/jared/dce/build/lib/tc/m_ipt.so" />
+        <installed value="/home/jared/dce/build/lib/tc/m_xt.so" />
+        <installed value="/home/jared/dce/build/sbin/arpd" />
+        <installed value="/home/jared/dce/build/sbin/ctstat" />
+        <installed value="/home/jared/dce/build/sbin/genl" />
+        <installed value="/home/jared/dce/build/sbin/ifcfg" />
+        <installed value="/home/jared/dce/build/sbin/ifstat" />
+        <installed value="/home/jared/dce/build/sbin/ip" />
+        <installed value="/home/jared/dce/build/sbin/lnstat" />
+        <installed value="/home/jared/dce/build/sbin/nstat" />
+        <installed value="/home/jared/dce/build/sbin/routef" />
+        <installed value="/home/jared/dce/build/sbin/routel" />
+        <installed value="/home/jared/dce/build/sbin/rtacct" />
+        <installed value="/home/jared/dce/build/sbin/rtmon" />
+        <installed value="/home/jared/dce/build/sbin/rtpr" />
+        <installed value="/home/jared/dce/build/sbin/rtstat" />
+        <installed value="/home/jared/dce/build/sbin/ss" />
+        <installed value="/home/jared/dce/build/sbin/tc" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/SNAPSHOT.tex" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/api-ip6-flowlabels.tex" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/arpd.sgml" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/README.cbq" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/README.iproute2+tc" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/SYN-DoS.rate.limit" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/cbq.init-v0.7.3" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/cbqinit.eth1" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/dhcp-client-script" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/diffserv/Edge1" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/diffserv/Edge2" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/diffserv/Edge31-ca-u32" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/diffserv/Edge31-cb-chains" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/diffserv/Edge32-ca-u32" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/diffserv/Edge32-cb-chains" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/diffserv/Edge32-cb-u32" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/diffserv/README" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/diffserv/afcbq" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/diffserv/ef-prio" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/diffserv/efcbq" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/diffserv/regression-testing" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/examples/gaiconf" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/ip-cref.tex" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/ip-tunnels.tex" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/nstat.sgml" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/preamble.tex" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/rtstat.sgml" />
+        <installed value="/home/jared/dce/build/share/doc/iproute2/ss.sgml" />
+        <installed value="/home/jared/dce/build/share/man/man3/libnetlink.3" />
+        <installed value="/home/jared/dce/build/share/man/man8/arpd.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/ctstat.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/ip.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/lnstat.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/nstat.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/routef.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/routel.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/rtacct.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/rtmon.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/rtstat.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/ss.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/tc-bfifo.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/tc-cbq-details.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/tc-cbq.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/tc-drr.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/tc-htb.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/tc-pfifo.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/tc-pfifo_fast.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/tc-prio.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/tc-red.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/tc-sfq.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/tc-tbf.8" />
+        <installed value="/home/jared/dce/build/share/man/man8/tc.8" />
+        <installed value="/home/jared/dce/build/usr/lib/tc/experimental.dist" />
+        <installed value="/home/jared/dce/build/usr/lib/tc/normal.dist" />
+        <installed value="/home/jared/dce/build/usr/lib/tc/pareto.dist" />
+        <installed value="/home/jared/dce/build/usr/lib/tc/paretonormal.dist" />
+        <source type="archive">
+            <attribute name="post_download" value="" />
+            <attribute name="url" value="http://www.linuxgrill.com/anonymous/iproute2/NEW-OSDL/iproute2-2.6.38.tar.bz2" />
+            <attribute name="new_variable" value="" />
+            <attribute name="patch" value="" />
+            <attribute name="module_directory" value="" />
+        </source>
+        <build type="make">
+            <attribute name="CXXFLAGS" value="" />
+            <attribute name="build_arguments" value="CCOPTS+=-fpic CCOPTS+=-D_GNU_SOURCE CCOPTS+=-O0 CCOPTS+=-U_FORTIFY_SOURCE CCOPTS+=-g LDFLAGS=-pie LDFLAGS+=-rdynamic" />
+            <attribute name="v_LD_LIBRARY" value="" />
+            <attribute name="LDFLAGS" value="-pie" />
+            <attribute name="ignore_predefined_flags" value="True" />
+            <attribute name="configure_arguments" value="" />
+            <attribute name="pre_installation" value="$SRCDIR/configure" />
+            <attribute name="patch" value="$SRCDIR/../ns-3-dce/utils/iproute-2.6.38-fix-01.patch" />
+            <attribute name="CFLAGS" value="" />
+            <attribute name="supported_os" value="linux;linux2" />
+            <attribute name="v_PATH" value="" />
+            <attribute name="no_installation" value="" />
+            <attribute name="new_variable" value="" />
+            <attribute name="objdir" value="yes" />
+            <attribute name="post_installation" value="" />
+            <attribute name="install_arguments" value="DESTDIR=$INSTALLDIR" />
+            <attribute name="v_PKG_CONFIG" value="" />
+        </build>
+        <depends_on name="libdb-dev" optional="False" />
+        <depends_on name="bison" optional="False" />
+        <depends_on name="flex" optional="False" />
+        <depends_on name="libssl-dev" optional="False" />
+    </module>
+
+    <module built_once="True" name="bash">
+        <installed value="/home/jared/dce/build/bin/bash" />
+        <installed value="/home/jared/dce/build/bin/bashbug" />
+        <installed value="/home/jared/dce/build/share/info/bash.info" />
+        <installed value="/home/jared/dce/build/share/info/dir" />
+        <installed value="/home/jared/dce/build/share/locale/af/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/bg/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/ca/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/cs/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/de/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/en@boldquot/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/en@quot/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/eo/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/es/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/et/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/fi/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/fr/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/ga/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/hu/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/id/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/ja/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/lt/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/nl/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/pl/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/pt_BR/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/ro/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/ru/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/sk/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/sv/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/tr/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/vi/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/locale/zh_TW/LC_MESSAGES/bash.mo" />
+        <installed value="/home/jared/dce/build/share/man/man1/bash.1" />
+        <installed value="/home/jared/dce/build/share/man/man1/bashbug.1" />
+        <source type="archive">
+            <attribute name="extract_directory" value="bash-4.1" />
+            <attribute name="post_download" value="" />
+            <attribute name="url" value="http://ftp.gnu.org/gnu/bash/bash-4.1.tar.gz" />
+            <attribute name="new_variable" value="" />
+            <attribute name="patch" value="" />
+            <attribute name="module_directory" value="" />
+        </source>
+        <build type="make">
+            <attribute name="CXXFLAGS" value="" />
+            <attribute name="build_arguments" value="" />
+            <attribute name="v_LD_LIBRARY" value="" />
+            <attribute name="LDFLAGS" value="" />
+            <attribute name="ignore_predefined_flags" value="False" />
+            <attribute name="configure_arguments" value="" />
+            <attribute name="pre_installation" value="cd $SRCDIR; CFLAGS='-g -fPIC' LDFLAGS='-pie -rdynamic' CFLAGS_FOR_BUILD='-g -fPIC' ./configure --without-bash-malloc --prefix=$INSTALLDIR" />
+            <attribute name="patch" value="" />
+            <attribute name="CFLAGS" value="" />
+            <attribute name="supported_os" value="" />
+            <attribute name="v_PATH" value="" />
+            <attribute name="no_installation" value="" />
+            <attribute name="new_variable" value="" />
+            <attribute name="objdir" value="yes" />
+            <attribute name="post_installation" value="" />
+            <attribute name="install_arguments" value="" />
+            <attribute name="v_PKG_CONFIG" value="" />
+        </build>
+    </module>
+
+    <module name="dce-sdn-1.7">
+      <source type="git">
+          <attribute name="url" value="https://github.com/jaredivey/ns-3-dce-1.7.git"/>
         <attribute name="module_directory" value="ns-3-dce"/>
       </source>
       <!-- usual DCE dependencies -->
@@ -1597,6 +1837,7 @@
     <module name="Ryu">
       <source type="git">
           <attribute name="url" value="https://github.com/osrg/ryu.git"/>
+        <attribute name="revision" value="0aefad7048079656cdaad138be58f017e6b4f1ce"/>
         <attribute name="module_directory" value="ryu"/>
       </source>
       <build type="none" objdir="no">
