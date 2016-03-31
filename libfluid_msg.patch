@@ -20,8 +20,25 @@ index 7c2ea40..b79e00b 100644
          return this->tp_port_;
      }
      void tp_port(uint16_t tp_port) {
+diff --git a/fluid/of13/of13match.hh b/fluid/of13/of13match.hh
+index 407308f..23a5f85 100644
+--- a/fluid/of13/of13match.hh
++++ b/fluid/of13/of13match.hh
+@@ -1113,6 +1113,12 @@ public:
+     void value(uint64_t value) {
+         this->value_ = value;
+     }
++    uint64_t mask() const {
++        return this->mask_;
++    }
++    void mask(uint64_t mask) {
++        this->mask_ = mask;
++    }
+ };
+ 
+ class IPv6Exthdr: public OXMTLV {
 diff --git a/fluid/util/util.h b/fluid/util/util.h
-index cbd3e4d..341cfbc 100644
+index 60f34b9..17d853b 100644
 --- a/fluid/util/util.h
 +++ b/fluid/util/util.h
 @@ -65,7 +65,7 @@
