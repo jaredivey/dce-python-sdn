@@ -37,6 +37,19 @@ index 407308f..23a5f85 100644
  };
  
  class IPv6Exthdr: public OXMTLV {
+diff --git a/fluid/of13/openflow-13.h b/fluid/of13/openflow-13.h
+index e810fde..90c94c4 100644
+--- a/fluid/of13/openflow-13.h
++++ b/fluid/of13/openflow-13.h
+@@ -1380,7 +1380,7 @@ struct ofp_packet_out {
+ };
+ OFP_ASSERT(sizeof(struct ofp_packet_out) == 24);
+ 
+-#define OFP_NO_BUFFER 0xffffffff
++const uint32_t OFP_NO_BUFFER = 0xffffffff;
+ 
+ /* Packet received on port (datapath -> controller). */
+ struct ofp_packet_in {
 diff --git a/fluid/util/util.h b/fluid/util/util.h
 index 60f34b9..17d853b 100644
 --- a/fluid/util/util.h
