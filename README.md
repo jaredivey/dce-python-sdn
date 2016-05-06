@@ -54,5 +54,5 @@ It is recommended that a VM be used for testing and experimenting, particularly 
 1. Go to the ns-3-dce directory and run an example script to test:
   ```
   cd source/ns-3-dce
-  ./waf --run dce-python-sdn
+  ./waf --run "dce-python-sdn --numControllers=1 --numSwitches=4 --numHosts=4"
   ```
