@@ -698,6 +698,90 @@
       </build>
     </module>
 
+<module name="setuptools">
+<source type="system_dependency">
+<attribute name="post_download" value="" />
+<attribute name="try_to_install" value="false" />
+<attribute name="new_variable" value="" />
+<attribute name="name_port" value="py-setuptools" />
+<attribute name="patch" value="" />
+<attribute name="dependency_test" value="easy_install" />
+<attribute name="name_yum" value="python-setuptools" />
+<attribute name="more_information" value="The python-setuptools package is not installed, try to install it." />
+<attribute name="name_apt-get" value="python-setuptools" />
+<attribute name="module_directory" value="" />
+</source>
+<build type="none">
+<attribute name="v_LD_LIBRARY" value="" />
+<attribute name="ignore_predefined_flags" value="False" />
+<attribute name="pre_installation" value="" />
+<attribute name="patch" value="" />
+<attribute name="supported_os" value="" />
+<attribute name="v_PATH" value="" />
+<attribute name="no_installation" value="" />
+<attribute name="new_variable" value="" />
+<attribute name="objdir" value="no" />
+<attribute name="post_installation" value="" />
+<attribute name="v_PKG_CONFIG" value="" />
+</build>
+</module>
+
+    <module name="pybindgen">
+      <source type="git">
+        <attribute name="fetch_option" value="" />
+        <attribute name="post_download" value="" />
+        <attribute name="url" value="https://github.com/gjcarneiro/pybindgen.git" />
+        <attribute name="new_variable" value="" />
+        <attribute name="patch" value="" />
+        <attribute name="module_directory" value="" />
+        <attribute name="revision" value="refs/remotes/origin/master" />
+      </source>
+      <build type="python">
+        <attribute name="v_LD_LIBRARY" value="" />
+        <attribute name="ignore_predefined_flags" value="False" />
+        <attribute name="pre_installation" value="" />
+        <attribute name="patch" value="" />
+        <attribute name="supported_os" value="" />
+        <attribute name="v_PATH" value="" />
+        <attribute name="no_installation" value="" />
+        <attribute name="new_variable" value="" />
+        <attribute name="objdir" value="yes" />
+        <attribute name="post_installation" value="" />
+        <attribute name="v_PKG_CONFIG" value="" />
+      </build>
+      <depends_on name="pygccxml" optional="True" />
+      <depends_on name="python-dev" optional="True" />
+      <depends_on name="setuptools" optional="False" />
+    </module>
+
+    <module name="pybindgen-0.17.0.post41+ngd10fa60">
+      <source type="git">
+        <attribute name="fetch_option" value="" />
+        <attribute name="post_download" value="" />
+        <attribute name="url" value="https://github.com/gjcarneiro/pybindgen.git" />
+        <attribute name="new_variable" value="" />
+        <attribute name="patch" value="" />
+        <attribute name="module_directory" value="pybindgen" />
+        <attribute name="revision" value="d10fa606" />
+      </source>
+      <build type="python">
+        <attribute name="v_LD_LIBRARY" value="" />
+        <attribute name="ignore_predefined_flags" value="False" />
+        <attribute name="pre_installation" value="" />
+        <attribute name="patch" value="" />
+        <attribute name="supported_os" value="" />
+        <attribute name="v_PATH" value="" />
+        <attribute name="no_installation" value="" />
+        <attribute name="new_variable" value="" />
+        <attribute name="objdir" value="yes" />
+        <attribute name="post_installation" value="" />
+        <attribute name="v_PKG_CONFIG" value="" />
+      </build>
+      <depends_on name="pygccxml" optional="True" />
+      <depends_on name="python-dev" optional="True" />
+      <depends_on name="setuptools" optional="False" />
+    </module>
+
     <module name="pybindgen-dev">
       <source type="bazaar">
         <attribute name="post_download" value=""/>
@@ -958,6 +1042,38 @@
       <depends_on name="qt4" optional="False"/>
       <depends_on name="g++" optional="False"/>
     </module>
+
+<module name="netanim-3.106">
+<source type="mercurial">
+<attribute name="post_download" value="" />
+<attribute name="url" value="http://code.nsnam.org/netanim" />
+<attribute name="new_variable" value="" />
+<attribute name="patch" value="" />
+<attribute name="module_directory" value="" />
+<attribute name="revision" value="986cb092c312" />
+</source>
+<build type="make">
+<attribute name="CXXFLAGS" value="" />
+<attribute name="build_arguments" value="" />
+<attribute name="v_LD_LIBRARY" value="" />
+<attribute name="LDFLAGS" value="" />
+<attribute name="ignore_predefined_flags" value="False" />
+<attribute name="configure_arguments" value="" />
+<attribute name="pre_installation" value="cd $SRCDIR;qmake NetAnim.pro or cd $SRCDIR;qmake-qt4 NetAnim.pro or cd $SRCDIR;qmake -spec macx-g++ NetAnim.pro" />
+<attribute name="patch" value="" />
+<attribute name="CFLAGS" value="" />
+<attribute name="supported_os" value="" />
+<attribute name="v_PATH" value="" />
+<attribute name="no_installation" value="" />
+<attribute name="new_variable" value="" />
+<attribute name="objdir" value="no" />
+<attribute name="post_installation" value="" />
+<attribute name="install_arguments" value="" />
+<attribute name="v_PKG_CONFIG" value="" />
+</build>
+<depends_on name="qt4" optional="False" />
+<depends_on name="g++" optional="False" />
+</module>
 
    <module name="netanim-3.103">
       <source type="mercurial">
@@ -1583,9 +1699,26 @@
       </build>
     </module>
 
-    <module name="ns-3-sdn">
+    <module built_once="True" name="jdk8u">
+      <source type="mercurial">
+        <attribute name="post_download" value="cd $SRCDIR ; sh get_source.sh ; chmod +x configure ; cd jdk ; hg checkout 8fe85977d5a6 ; patch -p1 -i $SRCDIR/../../jdk.patch ; cd ../hotspot ; hg checkout 88ae10297731 ; patch -p1 -i $SRCDIR/../../hotspot.patch" />
+        <attribute name="url" value="http://hg.openjdk.java.net/jdk8u/jdk8u" />
+        <attribute name="new_variable" value="" />
+        <attribute name="patch" value="" />
+        <attribute name="module_directory" value="" />
+        <attribute name="revision" value="2e3f32ffc677" />
+      </source>
+      <build type="autotools" objdir="no">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="configure_arguments" value="./configure --with-extra-cflags='-g -fPIC -U_FORTIFY_SOURCE' --with-extra-cxxflags='-g -fpic -U_FORTIFY_SOURCE' --with-extra-ldflags='-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+        <attribute name="post_installation" value=""/>
+      </build>
+    </module>
+
+    <module name="ns-3-sdn-1.0">
       <source type="git">
           <attribute name="url" value="https://github.com/jaredivey/ns-3-sdn.git"/>
+        <attribute name="revision" value="dbfb2f0a11cb88bcf822445085c8f41b224e72d8"/>
         <attribute name="module_directory" value="ns-3-sdn"/>
       </source>
       <depends_on name="netanim-3.105" optional="True"/>
@@ -1611,7 +1744,7 @@
       <!-- SDN dependencies -->
       <depends_on name="Ryu" optional="False"/>
       <depends_on name="POX" optional="False"/>
-      <depends_on name="ns-3-sdn" optional="False"/>
+      <depends_on name="ns-3-sdn-1.0" optional="False"/>
       <depends_on name="net-next-sim-2.6.36" optional="False"/>
       <depends_on name="Python-2.7.10" optional="False"/>
       <depends_on name="iproute-2.6.38-fix-01" optional="False"/>
@@ -1686,10 +1819,142 @@
         </build>
     </module>
 
+<module name="ns-3.24">
+<source type="mercurial">
+<attribute name="post_download" value="" />
+<attribute name="url" value="http://code.nsnam.org/ns-3.24" />
+<attribute name="new_variable" value="" />
+<attribute name="patch" value="" />
+<attribute name="module_directory" value="" />
+<attribute name="revision" value="tip" />
+</source>
+<build type="waf">
+<attribute name="CXXFLAGS" value="" />
+<attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --enable-examples --enable-tests" />
+<attribute name="v_LD_LIBRARY" value="" />
+<attribute name="LDFLAGS" value="" />
+<attribute name="CC" value="" />
+<attribute name="ignore_predefined_flags" value="False" />
+<attribute name="build_arguments" value="" />
+<attribute name="pre_installation" value="" />
+<attribute name="patch" value="$SRCDIR/../../ns-3.24-to-ns-3.24.1.patch" />
+<attribute name="CFLAGS" value="" />
+<attribute name="CXX" value="" />
+<attribute name="supported_os" value="" />
+<attribute name="v_PATH" value="" />
+<attribute name="no_installation" value="" />
+<attribute name="new_variable" value="" />
+<attribute name="objdir" value="yes" />
+<attribute name="post_installation" value="" />
+<attribute name="install_arguments" value="" />
+<attribute name="v_PKG_CONFIG" value="" />
+</build>
+<depends_on name="netanim-3.106" optional="True" />
+<depends_on name="pybindgen-0.17.0.post41+ngd10fa60" optional="True" />
+<depends_on name="pyviz-prerequisites" optional="True" />
+</module>
+
+<module name="ns-3-sdn-3.24">
+<source type="git">
+<attribute name="url" value="https://github.com/jaredivey/ns-3-sdn-3.24.git"/>
+<attribute name="module_directory" value="ns-3-sdn"/>
+</source>
+<build type="waf">
+<attribute name="CXXFLAGS" value="" />
+<attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --enable-examples --enable-tests --enable-mpi --enable-sdn" />
+<attribute name="v_LD_LIBRARY" value="" />
+<attribute name="LDFLAGS" value="" />
+<attribute name="CC" value="" />
+<attribute name="ignore_predefined_flags" value="False" />
+<attribute name="build_arguments" value="" />
+<attribute name="pre_installation" value="" />
+<attribute name="patch" value="" />
+<attribute name="CFLAGS" value="" />
+<attribute name="CXX" value="" />
+<attribute name="supported_os" value="" />
+<attribute name="v_PATH" value="" />
+<attribute name="no_installation" value="" />
+<attribute name="new_variable" value="" />
+<attribute name="objdir" value="yes" />
+<attribute name="post_installation" value="" />
+<attribute name="install_arguments" value="" />
+<attribute name="v_PKG_CONFIG" value="" />
+</build>
+<depends_on name="netanim-3.106" optional="True" />
+<depends_on name="pybindgen-0.17.0.post41+ngd10fa60" optional="True" />
+<depends_on name="pyviz-prerequisites" optional="True" />
+</module>
+
+<module name="dce-meta-1.7">
+<source type="mercurial">
+<attribute name="post_download" value="" />
+<attribute name="url" value="http://code.nsnam.org/ns-3-dce" />
+<attribute name="new_variable" value="" />
+<attribute name="patch" value="" />
+<attribute name="module_directory" value="ns-3-dce" />
+<attribute name="revision" value="dce-1.7" />
+</source>
+<build type="none">
+<attribute name="v_LD_LIBRARY" value="" />
+<attribute name="ignore_predefined_flags" value="False" />
+<attribute name="pre_installation" value="" />
+<attribute name="patch" value="" />
+<attribute name="supported_os" value="" />
+<attribute name="v_PATH" value="" />
+<attribute name="no_installation" value="" />
+<attribute name="new_variable" value="" />
+<attribute name="objdir" value="no" />
+<attribute name="post_installation" value="" />
+<attribute name="v_PKG_CONFIG" value="" />
+</build>
+<depends_on name="ns-3.24" optional="False" />
+<depends_on name="elf-loader" optional="True" />
+<depends_on name="iperf" optional="True" />
+<depends_on name="ccnx" optional="True" />
+<depends_on name="wget" optional="True" />
+<depends_on name="thttpd" optional="True" />
+<depends_on name="bash" optional="True" />
+</module>
+
+<module name="dce-linux-1.7">
+<source type="mercurial">
+<attribute name="post_download" value="" />
+<attribute name="url" value="http://code.nsnam.org/ns-3-dce" />
+<attribute name="new_variable" value="" />
+<attribute name="patch" value="" />
+<attribute name="module_directory" value="ns-3-dce" />
+<attribute name="revision" value="dce-1.7" />
+</source>
+<build type="waf">
+<attribute name="CXXFLAGS" value="" />
+<attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --enable-kernel-stack=$SRCDIR/../net-next-sim-2.6.36/arch" />
+<attribute name="v_LD_LIBRARY" value="" />
+<attribute name="LDFLAGS" value="" />
+<attribute name="CC" value="" />
+<attribute name="ignore_predefined_flags" value="False" />
+<attribute name="build_arguments" value="" />
+<attribute name="pre_installation" value="" />
+<attribute name="patch" value="" />
+<attribute name="CFLAGS" value="" />
+<attribute name="CXX" value="" />
+<attribute name="supported_os" value="linux;linux2" />
+<attribute name="v_PATH" value="" />
+<attribute name="no_installation" value="" />
+<attribute name="new_variable" value="" />
+<attribute name="objdir" value="yes" />
+<attribute name="post_installation" value="" />
+<attribute name="install_arguments" value="" />
+<attribute name="v_PKG_CONFIG" value="" />
+</build>
+<depends_on name="dce-meta-1.7" optional="False" />
+<depends_on name="net-next-sim-2.6.36" optional="False" />
+<depends_on name="iproute-2.6.38-fix-01" optional="False" />
+</module>
+
     <module name="dce-sdn-1.7">
-      <source type="git">
-          <attribute name="url" value="https://github.com/jaredivey/ns-3-dce-1.7.git"/>
-        <attribute name="module_directory" value="ns-3-dce"/>
+      < source type="git">
+        < attribute name="url" value="https://github.com/jaredivey/ns-3-dce-1.7.git"/>
+        < attribute name="module_directory" value="ns-3-dce"/>
       </source>
       <!-- usual DCE dependencies -->
       <depends_on name="elf-loader" optional="True"/>
@@ -1697,14 +1962,19 @@
       <depends_on name="iperf" optional="True"/>
       <depends_on name="wget" optional="True"/>
       <depends_on name="thttpd" optional="True"/>
+      <depends_on name="ccnx" optional="True"/>
       <!-- SDN dependencies -->
       <depends_on name="Ryu" optional="False"/>
       <depends_on name="POX" optional="False"/>
-      <depends_on name="ns-3-sdn" optional="False"/>
-      <depends_on name="Python-2.7.10" optional="False"/>
+      <depends_on name="ns-3-sdn-3.24" optional="False"/>
+      <depends_on name="net-next-sim-2.6.36" optional="False"/>
+      <depends_on name="Python-2.7.10" optional="True"/>
+      <depends_on name="jdk8u" optional="True"/>
+      <depends_on name="iproute-2.6.38-fix-01" optional="False"/>
+      <depends_on name="bash" optional="True"/>
       <build type="waf" objdir="build">
         <attribute name="supported_os" value="linux;linux2"/>
-        <attribute name="configure_arguments" value="configure --enable-mpi --disable-python --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR --prefix=$INSTALLDIR"/>
+        <attribute name="configure_arguments" value="configure --enable-mpi --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR --enable-kernel-stack=$SRCDIR/../net-next-sim-2.6.36/arch --prefix=$INSTALLDIR"/>
         <attribute name="post_installation" value="mkdir $SRCDIR/files-0 ; ln -s $INSTALLDIR/lib/python2.7 $SRCDIR/files-0/ ; cp -r $SRCDIR/../pox $SRCDIR/files-0/ ; cp $SRCDIR/../ryu/bin/ryu-manager $SRCDIR/files-0/ ; cp -r $SRCDIR/../ryu/ryu $SRCDIR/files-0/; cp -r $SRCDIR/../ryu/etc $SRCDIR/files-0/"/>
       </build>
     </module>

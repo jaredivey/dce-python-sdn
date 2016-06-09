@@ -1,0 +1,731 @@
+diff -r 88ae10297731 src/cpu/x86/vm/vm_version_x86.cpp
+--- a/src/cpu/x86/vm/vm_version_x86.cpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/cpu/x86/vm/vm_version_x86.cpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -412,7 +412,7 @@
+ 
+     // Some platforms (like Win*) need a wrapper around here
+     // in order to properly handle SEGV for YMM registers test.
+-    CALL_TEST_FUNC_WITH_WRAPPER_IF_NEEDED(get_cpu_info_wrapper);
++    //CALL_TEST_FUNC_WITH_WRAPPER_IF_NEEDED(get_cpu_info_wrapper);
+ 
+     assert_is_initialized();
+     _cpu = extended_cpu_family();
+@@ -452,9 +452,9 @@
+   //
+   // The only thing we can do is to verify that flushed
+   // ICache::line_size has correct value.
+-  guarantee(_cpuid_info.std_cpuid1_edx.bits.clflush != 0, "clflush is not supported");
++  //guarantee(_cpuid_info.std_cpuid1_edx.bits.clflush != 0, "clflush is not supported");
+   // clflush_size is size in quadwords (8 bytes).
+-  guarantee(_cpuid_info.std_cpuid1_ebx.bits.clflush_size == 8, "such clflush size is not supported");
++  //guarantee(_cpuid_info.std_cpuid1_ebx.bits.clflush_size == 8, "such clflush size is not supported");
+ #endif
+ 
+   // If the OS doesn't support SSE, we can't use this feature even if the HW does
+diff -r 88ae10297731 src/cpu/x86/vm/vm_version_x86.hpp
+--- a/src/cpu/x86/vm/vm_version_x86.hpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/cpu/x86/vm/vm_version_x86.hpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -383,97 +383,123 @@
+ 
+   // Extractors and predicates
+   static uint32_t extended_cpu_family() {
+-    uint32_t result = _cpuid_info.std_cpuid1_eax.bits.family;
+-    result += _cpuid_info.std_cpuid1_eax.bits.ext_family;
++    uint32_t result = 6; //_cpuid_info.std_cpuid1_eax.bits.family;
++    //result += _cpuid_info.std_cpuid1_eax.bits.ext_family;
+     return result;
+   }
+ 
+   static uint32_t extended_cpu_model() {
+-    uint32_t result = _cpuid_info.std_cpuid1_eax.bits.model;
+-    result |= _cpuid_info.std_cpuid1_eax.bits.ext_model << 4;
++    uint32_t result = 58; //_cpuid_info.std_cpuid1_eax.bits.model;
++    //result |= _cpuid_info.std_cpuid1_eax.bits.ext_model << 4;
+     return result;
+   }
+ 
+   static uint32_t cpu_stepping() {
+-    uint32_t result = _cpuid_info.std_cpuid1_eax.bits.stepping;
++    uint32_t result = 9; //_cpuid_info.std_cpuid1_eax.bits.stepping;
+     return result;
+   }
+ 
+   static uint logical_processor_count() {
+-    uint result = threads_per_core();
++    uint result = 2; //threads_per_core();
+     return result;
+   }
+ 
+   static uint32_t feature_flags() {
+     uint32_t result = 0;
+-    if (_cpuid_info.std_cpuid1_edx.bits.cmpxchg8 != 0)
++    //if (_cpuid_info.std_cpuid1_edx.bits.cmpxchg8 != 0) {
+       result |= CPU_CX8;
+-    if (_cpuid_info.std_cpuid1_edx.bits.cmov != 0)
++    //}
++    //if (_cpuid_info.std_cpuid1_edx.bits.cmov != 0) {
+       result |= CPU_CMOV;
+-    if (_cpuid_info.std_cpuid1_edx.bits.fxsr != 0 || (is_amd() &&
+-        _cpuid_info.ext_cpuid1_edx.bits.fxsr != 0))
++    //}
++    //if (_cpuid_info.std_cpuid1_edx.bits.fxsr != 0 || (is_amd() &&
++    //    _cpuid_info.ext_cpuid1_edx.bits.fxsr != 0)) {
+       result |= CPU_FXSR;
++    //}
+     // HT flag is set for multi-core processors also.
+-    if (threads_per_core() > 1)
++    //if (threads_per_core() > 1) {
+       result |= CPU_HT;
+-    if (_cpuid_info.std_cpuid1_edx.bits.mmx != 0 || (is_amd() &&
+-        _cpuid_info.ext_cpuid1_edx.bits.mmx != 0))
++    //}
++    //if (_cpuid_info.std_cpuid1_edx.bits.mmx != 0 || (is_amd() &&
++    //    _cpuid_info.ext_cpuid1_edx.bits.mmx != 0)) {
+       result |= CPU_MMX;
+-    if (_cpuid_info.std_cpuid1_edx.bits.sse != 0)
++    //}
++    //if (_cpuid_info.std_cpuid1_edx.bits.sse != 0) {
+       result |= CPU_SSE;
+-    if (_cpuid_info.std_cpuid1_edx.bits.sse2 != 0)
++    //}
++    //if (_cpuid_info.std_cpuid1_edx.bits.sse2 != 0) {
+       result |= CPU_SSE2;
+-    if (_cpuid_info.std_cpuid1_ecx.bits.sse3 != 0)
++    //}
++    //if (_cpuid_info.std_cpuid1_ecx.bits.sse3 != 0) {
+       result |= CPU_SSE3;
+-    if (_cpuid_info.std_cpuid1_ecx.bits.ssse3 != 0)
++    //}
++    //if (_cpuid_info.std_cpuid1_ecx.bits.ssse3 != 0) {
+       result |= CPU_SSSE3;
+-    if (_cpuid_info.std_cpuid1_ecx.bits.sse4_1 != 0)
++    //}
++    //if (_cpuid_info.std_cpuid1_ecx.bits.sse4_1 != 0) {
+       result |= CPU_SSE4_1;
+-    if (_cpuid_info.std_cpuid1_ecx.bits.sse4_2 != 0)
++    //}
++    //if (_cpuid_info.std_cpuid1_ecx.bits.sse4_2 != 0) {
+       result |= CPU_SSE4_2;
+-    if (_cpuid_info.std_cpuid1_ecx.bits.popcnt != 0)
++    //}
++    //if (_cpuid_info.std_cpuid1_ecx.bits.popcnt != 0) {
+       result |= CPU_POPCNT;
+-    if (_cpuid_info.std_cpuid1_ecx.bits.avx != 0 &&
+-        _cpuid_info.std_cpuid1_ecx.bits.osxsave != 0 &&
+-        _cpuid_info.xem_xcr0_eax.bits.sse != 0 &&
+-        _cpuid_info.xem_xcr0_eax.bits.ymm != 0) {
++    //}
++    //if (_cpuid_info.std_cpuid1_ecx.bits.avx != 0 &&
++    //    _cpuid_info.std_cpuid1_ecx.bits.osxsave != 0 &&
++    //    _cpuid_info.xem_xcr0_eax.bits.sse != 0 &&
++    //    _cpuid_info.xem_xcr0_eax.bits.ymm != 0) {
+       result |= CPU_AVX;
+-      if (_cpuid_info.sef_cpuid7_ebx.bits.avx2 != 0)
+-        result |= CPU_AVX2;
+-    }
+-    if(_cpuid_info.sef_cpuid7_ebx.bits.bmi1 != 0)
+-      result |= CPU_BMI1;
+-    if (_cpuid_info.std_cpuid1_edx.bits.tsc != 0)
++    //  if (_cpuid_info.sef_cpuid7_ebx.bits.avx2 != 0) {
++    //    result |= CPU_AVX2;
++    //  }
++    //}
++    //if(_cpuid_info.sef_cpuid7_ebx.bits.bmi1 != 0) {
++    //  result |= CPU_BMI1;
++    //}
++    //if (_cpuid_info.std_cpuid1_edx.bits.tsc != 0) {
+       result |= CPU_TSC;
+-    if (_cpuid_info.ext_cpuid7_edx.bits.tsc_invariance != 0)
++    //}
++    //if (_cpuid_info.ext_cpuid7_edx.bits.tsc_invariance != 0) {
+       result |= CPU_TSCINV;
+-    if (_cpuid_info.std_cpuid1_ecx.bits.aes != 0)
++    //}
++    //if (_cpuid_info.std_cpuid1_ecx.bits.aes != 0) {
+       result |= CPU_AES;
+-    if (_cpuid_info.sef_cpuid7_ebx.bits.erms != 0)
++    //}
++    //if (_cpuid_info.sef_cpuid7_ebx.bits.erms != 0) {
+       result |= CPU_ERMS;
+-    if (_cpuid_info.std_cpuid1_ecx.bits.clmul != 0)
++    //}
++    //if (_cpuid_info.std_cpuid1_ecx.bits.clmul != 0) {
+       result |= CPU_CLMUL;
+-    if (_cpuid_info.sef_cpuid7_ebx.bits.rtm != 0)
++    //}
++    //if (_cpuid_info.sef_cpuid7_ebx.bits.rtm != 0) {
+       result |= CPU_RTM;
++    //}
+ 
+     // AMD features.
+-    if (is_amd()) {
+-      if ((_cpuid_info.ext_cpuid1_edx.bits.tdnow != 0) ||
+-          (_cpuid_info.ext_cpuid1_ecx.bits.prefetchw != 0))
+-        result |= CPU_3DNOW_PREFETCH;
+-      if (_cpuid_info.ext_cpuid1_ecx.bits.lzcnt != 0)
+-        result |= CPU_LZCNT;
+-      if (_cpuid_info.ext_cpuid1_ecx.bits.sse4a != 0)
+-        result |= CPU_SSE4A;
+-    }
++//    if (is_amd()) {
++//      if ((_cpuid_info.ext_cpuid1_edx.bits.tdnow != 0) ||
++//          (_cpuid_info.ext_cpuid1_ecx.bits.prefetchw != 0)) {
++//        result |= CPU_3DNOW_PREFETCH;
++//      }
++//      if (_cpuid_info.ext_cpuid1_ecx.bits.lzcnt != 0) {
++//        result |= CPU_LZCNT;
++//      }
++//      if (_cpuid_info.ext_cpuid1_ecx.bits.sse4a != 0) {
++//        result |= CPU_SSE4A;
++//      }
++//    }
+     // Intel features.
+     if(is_intel()) {
+-      if(_cpuid_info.sef_cpuid7_ebx.bits.adx != 0)
++      if(_cpuid_info.sef_cpuid7_ebx.bits.adx != 0) {
+          result |= CPU_ADX;
+-      if(_cpuid_info.sef_cpuid7_ebx.bits.bmi2 != 0)
++       }
++      if(_cpuid_info.sef_cpuid7_ebx.bits.bmi2 != 0) {
+         result |= CPU_BMI2;
+-      if(_cpuid_info.ext_cpuid1_ecx.bits.lzcnt_intel != 0)
++      }
++      if(_cpuid_info.ext_cpuid1_ecx.bits.lzcnt_intel != 0) {
+         result |= CPU_LZCNT;
++      }
+       // for Intel, ecx.bits.misalignsse bit (bit 8) indicates support for prefetchw
+       if (_cpuid_info.ext_cpuid1_ecx.bits.misalignsse != 0) {
+         result |= CPU_3DNOW_PREFETCH;
+@@ -537,7 +563,7 @@
+ 
+   // Asserts
+   static void assert_is_initialized() {
+-    assert(_cpuid_info.std_cpuid1_eax.bits.family != 0, "VM_Version not initialized");
++    //assert(_cpuid_info.std_cpuid1_eax.bits.family != 0, "VM_Version not initialized");
+   }
+ 
+   //
+diff -r 88ae10297731 src/os/linux/vm/globals_linux.hpp
+--- a/src/os/linux/vm/globals_linux.hpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/os/linux/vm/globals_linux.hpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -32,7 +32,7 @@
+   product(bool, UseOprofile, false,                                     \
+         "enable support for Oprofile profiler")                         \
+                                                                         \
+-  product(bool, UseLinuxPosixThreadCPUClocks, true,                     \
++  product(bool, UseLinuxPosixThreadCPUClocks, false,                    \
+           "enable fast Linux Posix clocks where available")             \
+ /*  NB: The default value of UseLinuxPosixThreadCPUClocks may be        \
+     overridden in Arguments::parse_each_vm_init_arg.  */                \
+diff -r 88ae10297731 src/os/linux/vm/os_linux.cpp
+--- a/src/os/linux/vm/os_linux.cpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/os/linux/vm/os_linux.cpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -1046,7 +1046,12 @@
+   FILE *fp = fopen("/proc/self/maps", "r");
+   if (fp) {
+     address low, high;
++    fseek (fp, 42547, SEEK_SET);
+     while (!feof(fp)) {
++      for (;;) {
++        int ch = fgetc(fp);
++        if (ch == EOF || ch == (int)'\n') break;
++      }
+       if (fscanf(fp, "%p-%p", &low, &high) == 2) {
+         if (low <= addr && addr < high) {
+            if (vma_low)  *vma_low  = low;
+@@ -1055,10 +1060,10 @@
+            return true;
+         }
+       }
+-      for (;;) {
+-        int ch = fgetc(fp);
+-        if (ch == EOF || ch == (int)'\n') break;
+-      }
++//      for (;;) {
++//        int ch = fgetc(fp);
++//        if (ch == EOF || ch == (int)'\n') break;
++//      }
+     }
+     fclose(fp);
+   }
+@@ -1306,9 +1311,9 @@
+ void os::Linux::clock_init() {
+   // we do dlopen's in this particular order due to bug in linux
+   // dynamical loader (see 6348968) leading to crash on exit
+-  void* handle = dlopen("librt.so.1", RTLD_LAZY);
++  void* handle = dlopen("librt-ns3.so.1", RTLD_LAZY);
+   if (handle == NULL) {
+-    handle = dlopen("librt.so", RTLD_LAZY);
++    handle = dlopen("librt-ns3.so", RTLD_LAZY);
+   }
+ 
+   if (handle) {
+@@ -1362,8 +1367,9 @@
+   }
+   clockid_t clockid;
+   struct timespec tp;
++  void *rthandle = dlopen ("librt-ns3.so", RTLD_LAZY);
+   int (*pthread_getcpuclockid_func)(pthread_t, clockid_t *) =
+-      (int(*)(pthread_t, clockid_t *)) dlsym(RTLD_DEFAULT, "pthread_getcpuclockid");
++      (int(*)(pthread_t, clockid_t *)) dlsym(rthandle, "pthread_getcpuclockid");
+ 
+   // Switch to using fast clocks for thread cpu time if
+   // the sys_clock_getres() returns 0 error code.
+@@ -1378,7 +1384,7 @@
+      pthread_getcpuclockid_func(_main_thread, &clockid) == 0 &&
+      sys_clock_getres(clockid, &tp) == 0 && tp.tv_sec == 0) {
+ 
+-    _supports_fast_thread_cpu_time = true;
++    _supports_fast_thread_cpu_time = false;
+     _pthread_getcpuclockid = pthread_getcpuclockid_func;
+   }
+ }
+@@ -1770,11 +1776,14 @@
+   void* loaded_library() { return _lib; }
+ };
+ 
+-void * os::dll_load(const char *filename, char *ebuf, int ebuflen)
++void * os::dll_load(const char *filename1, char *ebuf, int ebuflen)
+ {
+   void * result = NULL;
+   bool load_attempted = false;
+ 
++  const char *temp = strrchr (filename1, '/');
++  const char *filename = (temp ? temp + 1 : NULL);
++  if (filename == NULL) return result;
+   // Check whether the library to load might change execution rights
+   // of the stack. If they are changed, the protection of the stack
+   // guard pages will be lost. We need a safepoint to fix this.
+@@ -2235,7 +2244,7 @@
+ #endif
+ }
+ 
+-static char saved_jvm_path[MAXPATHLEN] = {0};
++static char saved_jvm_path[MAXPATHLEN] = "/openjdk-1.8.0-internal/jre/lib/amd64/server/libjvm.so";
+ 
+ // Find the full path to the current module, libjvm.so
+ void os::jvm_path(char *buf, jint buflen) {
+@@ -5076,6 +5085,9 @@
+     errno = ENAMETOOLONG;
+     return -1;
+   }
++  char temppathbuf[MAX_PATH];
++  sprintf(temppathbuf, "%s", path);
++  char *modpath = strrchr(temppathbuf, '/');
+   os::native_path(strcpy(pathbuf, path));
+   return ::stat(pathbuf, sbuf);
+ }
+@@ -5314,12 +5326,12 @@
+ // the fast estimate available on the platform.
+ 
+ jlong os::current_thread_cpu_time() {
+-  if (os::Linux::supports_fast_thread_cpu_time()) {
+-    return os::Linux::fast_thread_cpu_time(CLOCK_THREAD_CPUTIME_ID);
+-  } else {
++  //if (os::Linux::supports_fast_thread_cpu_time()) {
++  //  return os::Linux::fast_thread_cpu_time(CLOCK_THREAD_CPUTIME_ID);
++  //} else {
+     // return user + sys since the cost is the same
+     return slow_thread_cpu_time(Thread::current(), true /* user + sys */);
+-  }
++  //}
+ }
+ 
+ jlong os::thread_cpu_time(Thread* thread) {
+diff -r 88ae10297731 src/os/linux/vm/os_linux.hpp
+--- a/src/os/linux/vm/os_linux.hpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/os/linux/vm/os_linux.hpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -216,7 +216,9 @@
+   }
+ 
+   static int pthread_getcpuclockid(pthread_t tid, clockid_t *clock_id) {
+-    return _pthread_getcpuclockid ? _pthread_getcpuclockid(tid, clock_id) : -1;
++    *clock_id = CLOCK_PROCESS_CPUTIME_ID;
++    return 0;
++//    return _pthread_getcpuclockid ? _pthread_getcpuclockid(tid, clock_id) : -1;
+   }
+ 
+   static bool supports_fast_thread_cpu_time() {
+diff -r 88ae10297731 src/share/vm/c1/c1_globals.hpp
+--- a/src/share/vm/c1/c1_globals.hpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/share/vm/c1/c1_globals.hpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -257,7 +257,7 @@
+   develop(bool, GenerateArrayStoreCheck, true,                              \
+           "Generates code for array store checks")                          \
+                                                                             \
+-  develop(bool, DeoptC1, true,                                              \
++  develop(bool, DeoptC1, false,                                             \
+           "Use deoptimization in C1")                                       \
+                                                                             \
+   develop(bool, PrintBailouts, false,                                       \
+diff -r 88ae10297731 src/share/vm/classfile/classLoader.cpp
+--- a/src/share/vm/classfile/classLoader.cpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/share/vm/classfile/classLoader.cpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -22,6 +22,7 @@
+  *
+  */
+ 
++#include <unistd.h>
+ #include "precompiled.hpp"
+ #include "classfile/classFileParser.hpp"
+ #include "classfile/classFileStream.hpp"
+@@ -761,7 +762,8 @@
+                                                bool check_for_duplicates,
+                                                bool throw_exception) {
+   struct stat st;
+-  if (os::stat(path, &st) == 0) {
++  const char *modpath = strstr (path, "openjdk");
++  if (os::stat(modpath, &st) == 0) {
+     // File or directory found
+     ClassPathEntry* new_entry = NULL;
+     Thread* THREAD = Thread::current();
+@@ -805,7 +807,13 @@
+   char path[JVM_MAXPATHLEN];
+   char ebuf[1024];
+   void* handle = NULL;
+-  if (os::dll_build_name(path, sizeof(path), Arguments::get_dll_dir(), "zip")) {
++
++  const char* self = "/proc/self/exe";
++  char buf[PATH_MAX+1];
++  int len = readlink(self, buf, PATH_MAX);
++  const char dll_dir[] = "/openjdk-1.8.0-internal/jre/lib/amd64";
++
++  if (os::dll_build_name(path, sizeof(path), (len >= 0 ? Arguments::get_dll_dir() : dll_dir), "zip")) {
+     handle = os::dll_load(path, ebuf, sizeof ebuf);
+   }
+   if (handle == NULL) {
+diff -r 88ae10297731 src/share/vm/memory/heap.cpp
+--- a/src/share/vm/memory/heap.cpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/share/vm/memory/heap.cpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -113,6 +113,7 @@
+   os::trace_page_sizes("code heap", committed_size, reserved_size, page_size,
+                        rs.base(), rs.size());
+   if (!_memory.initialize(rs, c_size)) {
++	  fprintf (stderr, "Could not initialize memory\n");
+     return false;
+   }
+ 
+@@ -126,6 +127,7 @@
+ 
+   // reserve space for _segmap
+   if (!_segmap.initialize(reserved_segments_size, committed_segments_size)) {
++	  fprintf (stderr, "Could not initialize segmap\n");
+     return false;
+   }
+ 
+diff -r 88ae10297731 src/share/vm/prims/jvmtiEnvBase.cpp
+--- a/src/share/vm/prims/jvmtiEnvBase.cpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/share/vm/prims/jvmtiEnvBase.cpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -51,9 +51,9 @@
+ //
+ // JvmtiEnvBase
+ //
+-
++#if INCLUDE_JVMTI
+ JvmtiEnvBase* JvmtiEnvBase::_head_environment = NULL;
+-
++#endif
+ bool JvmtiEnvBase::_globally_initialized = false;
+ volatile bool JvmtiEnvBase::_needs_clean_up = false;
+ 
+@@ -102,7 +102,9 @@
+       previous_env = env;
+     }
+     if (previous_env == NULL) {
++#if INCLUDE_JVMTI
+       _head_environment = this;
++#endif
+     } else {
+       previous_env->set_next_environment(this);
+     }
+@@ -285,7 +287,9 @@
+       JvmtiEnvBase* defunct_env = env;
+       env = it.next(env);
+       if (previous_env == NULL) {
++#if INCLUDE_JVMTI
+         _head_environment = env;
++#endif
+       } else {
+         previous_env->set_next_environment(env);
+       }
+diff -r 88ae10297731 src/share/vm/prims/jvmtiExport.cpp
+--- a/src/share/vm/prims/jvmtiExport.cpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/share/vm/prims/jvmtiExport.cpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -2204,6 +2204,7 @@
+   jint result = JNI_ERR;
+   const char *on_attach_symbols[] = AGENT_ONATTACH_SYMBOLS;
+   size_t num_symbol_entries = ARRAY_SIZE(on_attach_symbols);
++  const char dll_dir[] = "/openjdk-1.8.0-internal/jre/lib/amd64";
+ 
+   // get agent name and options
+   const char* agent = op->arg(0);
+@@ -2225,7 +2226,7 @@
+       library = os::dll_load(agent, ebuf, sizeof ebuf);
+     } else {
+       // Try to load the agent from the standard dll directory
+-      if (os::dll_build_name(buffer, sizeof(buffer), Arguments::get_dll_dir(),
++      if (os::dll_build_name(buffer, sizeof(buffer), dll_dir,
+                              agent)) {
+         library = os::dll_load(buffer, ebuf, sizeof ebuf);
+       }
+diff -r 88ae10297731 src/share/vm/runtime/globals.hpp
+--- a/src/share/vm/runtime/globals.hpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/share/vm/runtime/globals.hpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -3718,7 +3718,7 @@
+                                                                             \
+   /* flags for performance data collection */                               \
+                                                                             \
+-  product(bool, UsePerfData, falseInEmbedded,                               \
++  product(bool, UsePerfData, false,                                         \
+           "Flag to disable jvmstat instrumentation for performance testing "\
+           "and problem isolation purposes")                                 \
+                                                                             \
+diff -r 88ae10297731 src/share/vm/runtime/os.cpp
+--- a/src/share/vm/runtime/os.cpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/share/vm/runtime/os.cpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -22,6 +22,7 @@
+  *
+  */
+ 
++#include <unistd.h>
+ #include "precompiled.hpp"
+ #include "classfile/classLoader.hpp"
+ #include "classfile/javaClasses.hpp"
+@@ -404,16 +405,22 @@
+     char buffer[JVM_MAXPATHLEN];
+     char ebuf[1024];
+ 
++    // These 4 lines added by JSI.
++    const char* self = "/proc/self/exe";
++    char buf[PATH_MAX+1];
++    int len = readlink(self, buf, PATH_MAX);
++    const char dll_dir[] = "/openjdk-1.8.0-internal/jre/lib/amd64";
++
+     // Try to load verify dll first. In 1.3 java dll depends on it and is not
+     // always able to find it when the loading executable is outside the JDK.
+     // In order to keep working with 1.2 we ignore any loading errors.
+-    if (dll_build_name(buffer, sizeof(buffer), Arguments::get_dll_dir(),
++    if (dll_build_name(buffer, sizeof(buffer), (len >= 0 ? Arguments::get_dll_dir() : dll_dir),
+                        "verify")) {
+       dll_load(buffer, ebuf, sizeof(ebuf));
+     }
+ 
+     // Load java dll
+-    if (dll_build_name(buffer, sizeof(buffer), Arguments::get_dll_dir(),
++    if (dll_build_name(buffer, sizeof(buffer), (len >= 0 ? Arguments::get_dll_dir() : dll_dir),
+                        "java")) {
+       _native_java_library = dll_load(buffer, ebuf, sizeof(ebuf));
+     }
+@@ -424,7 +431,7 @@
+ #if defined(__OpenBSD__)
+     // Work-around OpenBSD's lack of $ORIGIN support by pre-loading libnet.so
+     // ignore errors
+-    if (dll_build_name(buffer, sizeof(buffer), Arguments::get_dll_dir(),
++    if (dll_build_name(buffer, sizeof(buffer), (len >= 0 ? Arguments::get_dll_dir() : dll_dir),
+                        "net")) {
+       dll_load(buffer, ebuf, sizeof(ebuf));
+     }
+diff -r 88ae10297731 src/share/vm/runtime/thread.cpp
+--- a/src/share/vm/runtime/thread.cpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/share/vm/runtime/thread.cpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -1613,18 +1613,18 @@
+     delete old_array;
+   }
+ 
+-  GrowableArray<jvmtiDeferredLocalVariableSet*>* deferred = deferred_locals();
+-  if (deferred != NULL) {
+-    // This can only happen if thread is destroyed before deoptimization occurs.
+-    assert(deferred->length() != 0, "empty array!");
+-    do {
+-      jvmtiDeferredLocalVariableSet* dlv = deferred->at(0);
+-      deferred->remove_at(0);
+-      // individual jvmtiDeferredLocalVariableSet are CHeapObj's
+-      delete dlv;
+-    } while (deferred->length() != 0);
+-    delete deferred;
+-  }
++//  GrowableArray<jvmtiDeferredLocalVariableSet*>* deferred = deferred_locals();
++//  if (deferred != NULL) {
++//    // This can only happen if thread is destroyed before deoptimization occurs.
++//    assert(deferred->length() != 0, "empty array!");
++//    do {
++//      jvmtiDeferredLocalVariableSet* dlv = deferred->at(0);
++//      deferred->remove_at(0);
++//      // individual jvmtiDeferredLocalVariableSet are CHeapObj's
++//      delete dlv;
++//    } while (deferred->length() != 0);
++//    delete deferred;
++//  }
+ 
+   // All Java related clean up happens in exit
+   ThreadSafepointState::destroy(this);
+@@ -1664,9 +1664,9 @@
+   // been completed.
+   this->set_active_handles(JNIHandleBlock::allocate_block());
+ 
+-  if (JvmtiExport::should_post_thread_life()) {
+-    JvmtiExport::post_thread_start(this);
+-  }
++//  if (JvmtiExport::should_post_thread_life()) {
++//    JvmtiExport::post_thread_start(this);
++//  }
+ 
+   EventThreadStart event;
+   if (event.should_commit()) {
+@@ -1829,9 +1829,9 @@
+       }
+     }
+     // notify JVMTI
+-    if (JvmtiExport::should_post_thread_life()) {
+-      JvmtiExport::post_thread_end(this);
+-    }
++//    if (JvmtiExport::should_post_thread_life()) {
++//      JvmtiExport::post_thread_end(this);
++//    }
+ 
+     // We have notified the agents that we are exiting, before we go on,
+     // we must check for a pending external suspend request and honor it
+@@ -1906,9 +1906,9 @@
+     tlab().make_parsable(true);  // retire TLAB
+   }
+ 
+-  if (JvmtiEnv::environments_might_exist()) {
+-    JvmtiExport::cleanup_thread(this);
+-  }
++//  if (JvmtiEnv::environments_might_exist()) {
++//    JvmtiExport::cleanup_thread(this);
++//  }
+ 
+   // We must flush any deferred card marks before removing a thread from
+   // the list of active threads.
+@@ -2770,12 +2770,12 @@
+   assert(vframe_array_head() == NULL, "deopt in progress at a safepoint!");
+   // If we have deferred set_locals there might be oops waiting to be
+   // written
+-  GrowableArray<jvmtiDeferredLocalVariableSet*>* list = deferred_locals();
+-  if (list != NULL) {
+-    for (int i = 0; i < list->length(); i++) {
+-      list->at(i)->oops_do(f);
+-    }
+-  }
++//  GrowableArray<jvmtiDeferredLocalVariableSet*>* list = deferred_locals();
++//  if (list != NULL) {
++//    for (int i = 0; i < list->length(); i++) {
++//      list->at(i)->oops_do(f);
++//    }
++//  }
+ 
+   // Traverse instance variables at the end since the GC may be moving things
+   // around using this function
+@@ -2784,9 +2784,9 @@
+   f->do_oop((oop*) &_exception_oop);
+   f->do_oop((oop*) &_pending_async_exception);
+ 
+-  if (jvmti_thread_state() != NULL) {
+-    jvmti_thread_state()->oops_do(f);
+-  }
++//  if (jvmti_thread_state() != NULL) {
++//    jvmti_thread_state()->oops_do(f);
++//  }
+ }
+ 
+ void JavaThread::nmethods_do(CodeBlobClosure* cf) {
+@@ -3436,7 +3436,7 @@
+ 
+   // Any JVMTI raw monitors entered in onload will transition into
+   // real raw monitor. VM is setup enough here for raw monitor enter.
+-  JvmtiExport::transition_pending_onload_raw_monitors();
++  //JvmtiExport::transition_pending_onload_raw_monitors();
+ 
+   // Create the VMThread
+   { TraceTime timer("Start VMThread", TraceStartupTime);
+@@ -3476,10 +3476,10 @@
+ 
+   // Always call even when there are not JVMTI environments yet, since environments
+   // may be attached late and JVMTI must track phases of VM execution
+-  JvmtiExport::enter_start_phase();
++  //JvmtiExport::enter_start_phase();
+ 
+   // Notify JVMTI agents that VM has started (JNI is up) - nop if no agents.
+-  JvmtiExport::post_vm_start();
++  //JvmtiExport::post_vm_start();
+ 
+   {
+     TraceTime timer("Initialize java.lang classes", TraceStartupTime);
+@@ -3602,7 +3602,7 @@
+ 
+   // Always call even when there are not JVMTI environments yet, since environments
+   // may be attached late and JVMTI must track phases of VM execution
+-  JvmtiExport::enter_live_phase();
++  //JvmtiExport::enter_live_phase();
+ 
+   // Signal Dispatcher needs to be started before VMInit event is posted
+   os::signal_init();
+@@ -3623,7 +3623,7 @@
+   }
+ 
+   // Notify JVMTI agents that VM initialization is complete - nop if no agents.
+-  JvmtiExport::post_vm_initialized();
++  //JvmtiExport::post_vm_initialized();
+ 
+   if (TRACE_START() != JNI_OK) {
+     vm_exit_during_initialization("Failed to start tracing backend.");
+@@ -3716,6 +3716,7 @@
+     char ebuf[1024];
+     const char *name = agent->name();
+     const char *msg = "Could not find agent library ";
++    const char dll_dir[] = "/openjdk-1.8.0-internal/jre/lib/amd64";
+ 
+     // First check to see if agent is statically linked into executable
+     if (os::find_builtin_agent(agent, on_load_symbols, num_symbol_entries)) {
+@@ -3733,7 +3734,7 @@
+       }
+     } else {
+       // Try to load the agent from the standard dll directory
+-      if (os::dll_build_name(buffer, sizeof(buffer), Arguments::get_dll_dir(),
++      if (os::dll_build_name(buffer, sizeof(buffer), dll_dir,
+                              name)) {
+         library = os::dll_load(buffer, ebuf, sizeof ebuf);
+       }
+@@ -3812,7 +3813,7 @@
+   extern struct JavaVM_ main_vm;
+   AgentLibrary* agent;
+ 
+-  JvmtiExport::enter_onload_phase();
++  //JvmtiExport::enter_onload_phase();
+ 
+   for (agent = Arguments::agents(); agent != NULL; agent = agent->next()) {
+     OnLoadEntry_t  on_load_entry = lookup_agent_on_load(agent);
+@@ -3827,7 +3828,7 @@
+       vm_exit_during_initialization("Could not find Agent_OnLoad function in the agent library", agent->name());
+     }
+   }
+-  JvmtiExport::enter_primordial_phase();
++  //JvmtiExport::enter_primordial_phase();
+ }
+ 
+ extern "C" {
+diff -r 88ae10297731 src/share/vm/runtime/virtualspace.cpp
+--- a/src/share/vm/runtime/virtualspace.cpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/share/vm/runtime/virtualspace.cpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -388,7 +388,7 @@
+ 
+ bool VirtualSpace::initialize_with_granularity(ReservedSpace rs, size_t committed_size, size_t max_commit_granularity) {
+   if(!rs.is_reserved()) return false;  // allocation failed.
+-  assert(_low_boundary == NULL, "VirtualSpace already initialized");
++  //assert(_low_boundary == NULL, "VirtualSpace already initialized");
+   assert(max_commit_granularity > 0, "Granularity must be non-zero.");
+ 
+   _low_boundary  = rs.base();
+diff -r 88ae10297731 src/share/vm/utilities/macros.hpp
+--- a/src/share/vm/utilities/macros.hpp	Mon Jan 26 15:51:28 2015 -0800
++++ b/src/share/vm/utilities/macros.hpp	Thu Jun 09 10:47:03 2016 -0400
+@@ -118,7 +118,7 @@
+ #endif // INCLUDE_CDS
+ 
+ #ifndef INCLUDE_MANAGEMENT
+-#define INCLUDE_MANAGEMENT 1
++#define INCLUDE_MANAGEMENT 0
+ #endif // INCLUDE_MANAGEMENT
+ 
+ #if INCLUDE_MANAGEMENT

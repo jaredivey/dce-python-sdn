@@ -1,0 +1,258 @@
+diff -r 8fe85977d5a6 make/BuildJdk.gmk
+--- a/make/BuildJdk.gmk	Fri Jul 17 10:37:25 2015 +0100
++++ b/make/BuildJdk.gmk	Thu Jun 09 10:28:39 2016 -0400
+@@ -129,9 +129,9 @@
+ 	$(MKDIR) -p $(INSTALL_PREFIX)/jvm/$(INSTALLDIR)
+ 	$(RM) -r $(INSTALL_PREFIX)/jvm/$(INSTALLDIR)/*
+ 	$(CP) -rp $(JDK_IMAGE_DIR)/* $(INSTALL_PREFIX)/jvm/$(INSTALLDIR)
+-	$(MKDIR) -p $(INSTALL_PREFIX)/bin
+-	$(RM) $(addprefix $(INSTALL_PREFIX)/bin/, $(BINARIES))
+-	$(foreach b, $(BINARIES), $(LN) -s $(INSTALL_PREFIX)/jvm/$(INSTALLDIR)/bin/$b $(INSTALL_PREFIX)/bin/$b &&) true
++#	$(MKDIR) -p $(INSTALL_PREFIX)/bin
++#	$(RM) $(addprefix $(INSTALL_PREFIX)/bin/, $(BINARIES))
++#	$(foreach b, $(BINARIES), $(LN) -s $(INSTALL_PREFIX)/jvm/$(INSTALLDIR)/bin/$b $(INSTALL_PREFIX)/bin/$b &&) true
+ 
+ # The all target builds the JDK, but not the images
+ all: jdk
+diff -r 8fe85977d5a6 src/share/bin/jli_util.c
+--- a/src/share/bin/jli_util.c	Fri Jul 17 10:37:25 2015 +0100
++++ b/src/share/bin/jli_util.c	Thu Jun 09 10:28:39 2016 -0400
+@@ -87,7 +87,7 @@
+ /*
+  * debug helpers we use
+  */
+-static jboolean _launcher_debug = JNI_FALSE;
++static jboolean _launcher_debug = JNI_TRUE;
+ 
+ void
+ JLI_TraceLauncher(const char* fmt, ...)
+diff -r 8fe85977d5a6 src/solaris/bin/java_md_common.c
+--- a/src/solaris/bin/java_md_common.c	Fri Jul 17 10:37:25 2015 +0100
++++ b/src/solaris/bin/java_md_common.c	Thu Jun 09 10:28:39 2016 -0400
+@@ -491,8 +491,11 @@
+ FindBootStrapClass(JNIEnv *env, const char* classname)
+ {
+    if (findBootClass == NULL) {
+-       findBootClass = (FindClassFromBootLoader_t *)dlsym(RTLD_DEFAULT,
+-          "JVM_FindClassFromBootLoader");
++	   void* handle = dlopen("libjvm.so", RTLD_LAZY);
++	   if (handle) {
++		   findBootClass = (FindClassFromBootLoader_t *)dlsym(handle,
++				   "JVM_FindClassFromBootLoader");
++	   }
+        if (findBootClass == NULL) {
+            JLI_ReportErrorMessage(DLL_ERROR4,
+                "JVM_FindClassFromBootLoader");
+diff -r 8fe85977d5a6 src/solaris/bin/java_md_solinux.c
+--- a/src/solaris/bin/java_md_solinux.c	Fri Jul 17 10:37:25 2015 +0100
++++ b/src/solaris/bin/java_md_solinux.c	Thu Jun 09 10:28:39 2016 -0400
+@@ -843,7 +843,7 @@
+ 
+     JLI_TraceLauncher("JVM path is %s\n", jvmpath);
+ 
+-    libjvm = dlopen(jvmpath, RTLD_NOW + RTLD_GLOBAL);
++    libjvm = dlopen(JVM_DLL, RTLD_NOW + RTLD_GLOBAL);
+     if (libjvm == NULL) {
+ #if defined(__solaris__) && defined(__sparc) && !defined(_LP64) /* i.e. 32-bit sparc */
+       FILE * fp;
+@@ -962,10 +962,9 @@
+         const char* self = "/proc/self/exe";
+         char buf[PATH_MAX+1];
+         int len = readlink(self, buf, PATH_MAX);
+-        if (len >= 0) {
+-            buf[len] = '\0';            /* readlink(2) doesn't NUL terminate */
+-            exec_path = JLI_StringDup(buf);
+-        }
++        len = 80;
++        snprintf (buf, len, "/openjdk-1.8.0-internal/jre/bin/java");
++        exec_path = JLI_StringDup(buf);
+     }
+ #else /* !__solaris__ && !__linux__ */
+     {
+diff -r 8fe85977d5a6 src/solaris/classes/java/io/UnixFileSystem.java
+--- a/src/solaris/classes/java/io/UnixFileSystem.java	Fri Jul 17 10:37:25 2015 +0100
++++ b/src/solaris/classes/java/io/UnixFileSystem.java	Thu Jun 09 10:28:39 2016 -0400
+@@ -159,7 +159,7 @@
+                     // resolved to the directory they're contained in
+                     dir = parentOrNull(path);
+                     if (dir != null) {
+-                        resDir = javaHomePrefixCache.get(dir);
++                        resDir = dir; //javaHomePrefixCache.get(dir);
+                         if (resDir != null) {
+                             // Hit only in prefix cache; full path is canonical
+                             String filename = path.substring(1 + dir.length());
+diff -r 8fe85977d5a6 src/solaris/native/java/net/linux_close.c
+--- a/src/solaris/native/java/net/linux_close.c	Fri Jul 17 10:37:25 2015 +0100
++++ b/src/solaris/native/java/net/linux_close.c	Thu Jun 09 10:28:39 2016 -0400
+@@ -78,6 +78,7 @@
+     struct rlimit nbr_files;
+     sigset_t sigset;
+     struct sigaction sa;
++    int i = 0;
+ 
+     /*
+      * Allocate table based on the maximum number of
+@@ -92,6 +93,11 @@
+         abort();
+     }
+ 
++    for (i = 0; i < fdCount; ++i)
++    {
++    	pthread_mutex_init (&fdTable[i].lock, NULL);
++    }
++
+     /*
+      * Setup the signal handler
+      */
+diff -r 8fe85977d5a6 src/solaris/native/java/net/net_util_md.c
+--- a/src/solaris/native/java/net/net_util_md.c	Fri Jul 17 10:37:25 2015 +0100
++++ b/src/solaris/native/java/net/net_util_md.c	Thu Jun 09 10:28:39 2016 -0400
+@@ -540,9 +540,7 @@
+ 
+ static void initLoopbackRoutes() {
+     FILE *f;
+-    char srcp[8][5];
+-    char hopp[8][5];
+-    int dest_plen, src_plen, use, refcnt, metric;
++    int dest_plen;
+     unsigned long flags;
+     char dest_str[40];
+     struct in6_addr dest_addr;
+@@ -564,28 +562,11 @@
+         return ;
+     }
+     while (fscanf(f, "%4s%4s%4s%4s%4s%4s%4s%4s %02x "
+-                     "%4s%4s%4s%4s%4s%4s%4s%4s %02x "
+-                     "%4s%4s%4s%4s%4s%4s%4s%4s "
+-                     "%08x %08x %08x %08lx %8s",
++                     "%08lx %8s",
+                      dest_str, &dest_str[5], &dest_str[10], &dest_str[15],
+                      &dest_str[20], &dest_str[25], &dest_str[30], &dest_str[35],
+                      &dest_plen,
+-                     srcp[0], srcp[1], srcp[2], srcp[3],
+-                     srcp[4], srcp[5], srcp[6], srcp[7],
+-                     &src_plen,
+-                     hopp[0], hopp[1], hopp[2], hopp[3],
+-                     hopp[4], hopp[5], hopp[6], hopp[7],
+-                     &metric, &use, &refcnt, &flags, device) == 31) {
+-
+-        /*
+-         * Some routes should be ignored
+-         */
+-        if ( (dest_plen < 0 || dest_plen > 128)  ||
+-             (src_plen != 0) ||
+-             (flags & (RTF_POLICY | RTF_FLOW)) ||
+-             ((flags & RTF_REJECT) && dest_plen == 0) ) {
+-            continue;
+-        }
++                     &flags, device) == 11) {
+ 
+         /*
+          * Convert the destination address
+@@ -599,6 +580,15 @@
+         dest_str[34] = ':';
+         dest_str[39] = '\0';
+ 
++        /*
++         * Some routes should be ignored
++         */
++        if ( (dest_plen < 0 || dest_plen > 128)  ||
++             (flags & (RTF_POLICY | RTF_FLOW)) ||
++             ((flags & RTF_REJECT) && dest_plen == 0) ) {
++            continue;
++        }
++
+         if (inet_pton(AF_INET6, dest_str, &dest_addr) < 0) {
+             /* not an Ipv6 address */
+             continue;
+@@ -634,16 +624,17 @@
+         int plen, scope, dad_status, if_idx;
+ 
+         if ((f = fopen("/proc/net/if_inet6", "r")) != NULL) {
+-            while (fscanf(f, "%4s%4s%4s%4s%4s%4s%4s%4s %08x %02x %02x %02x %20s\n",
++            while (fscanf(f, "%4s%4s%4s%4s%4s%4s%4s%4s %08x %20s\n",
+                       addr6p[0], addr6p[1], addr6p[2], addr6p[3],
+                       addr6p[4], addr6p[5], addr6p[6], addr6p[7],
+-                  &if_idx, &plen, &scope, &dad_status, devname) == 13) {
++                  &if_idx, devname) == 13) {
+ 
+                 if (strcmp(devname, "lo") == 0) {
+                     /*
+                      * Found - so just return the index
+                      */
+                     fclose(f);
++                    printf ("Scope ID for lo: %d\n", if_idx);
+                     lo_scope_id = if_idx;
+                     return;
+                 }
+@@ -674,16 +665,16 @@
+     unsigned char staddr [16];
+     char ifname [33];
+     struct localinterface *lif=0;
+-    int index, x1, x2, x3;
++    int index;
+     unsigned int u0,u1,u2,u3,u4,u5,u6,u7,u8,u9,ua,ub,uc,ud,ue,uf;
+ 
+     if ((f = fopen("/proc/net/if_inet6", "r")) == NULL) {
+         return ;
+     }
+     while (fscanf (f, "%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x%2x "
+-                "%d %x %x %x %32s",&u0,&u1,&u2,&u3,&u4,&u5,&u6,&u7,
++                "%d %32s",&u0,&u1,&u2,&u3,&u4,&u5,&u6,&u7,
+                 &u8,&u9,&ua,&ub,&uc,&ud,&ue,&uf,
+-                &index, &x1, &x2, &x3, ifname) == 21) {
++                &index, ifname) == 18) {
+         staddr[0] = (unsigned char)u0;
+         staddr[1] = (unsigned char)u1;
+         staddr[2] = (unsigned char)u2;
+@@ -1070,9 +1061,7 @@
+ #if defined(__linux__) && defined(AF_INET6)
+ int getDefaultIPv6Interface(struct in6_addr *target_addr) {
+     FILE *f;
+-    char srcp[8][5];
+-    char hopp[8][5];
+-    int dest_plen, src_plen, use, refcnt, metric;
++    int dest_plen;
+     unsigned long flags;
+     char dest_str[40];
+     struct in6_addr dest_addr;
+@@ -1087,24 +1076,16 @@
+         return -1;
+     }
+     while (fscanf(f, "%4s%4s%4s%4s%4s%4s%4s%4s %02x "
+-                     "%4s%4s%4s%4s%4s%4s%4s%4s %02x "
+-                     "%4s%4s%4s%4s%4s%4s%4s%4s "
+-                     "%08x %08x %08x %08lx %8s",
++                     "%08lx %8s",
+                      dest_str, &dest_str[5], &dest_str[10], &dest_str[15],
+                      &dest_str[20], &dest_str[25], &dest_str[30], &dest_str[35],
+                      &dest_plen,
+-                     srcp[0], srcp[1], srcp[2], srcp[3],
+-                     srcp[4], srcp[5], srcp[6], srcp[7],
+-                     &src_plen,
+-                     hopp[0], hopp[1], hopp[2], hopp[3],
+-                     hopp[4], hopp[5], hopp[6], hopp[7],
+-                     &metric, &use, &refcnt, &flags, device) == 31) {
++                     &flags, device) == 11) {
+ 
+         /*
+          * Some routes should be ignored
+          */
+         if ( (dest_plen < 0 || dest_plen > 128)  ||
+-             (src_plen != 0) ||
+              (flags & (RTF_POLICY | RTF_FLOW)) ||
+              ((flags & RTF_REJECT) && dest_plen == 0) ) {
+             continue;
+@@ -1173,10 +1154,10 @@
+         int plen, scope, dad_status, if_idx;
+ 
+         if ((f = fopen("/proc/net/if_inet6", "r")) != NULL) {
+-            while (fscanf(f, "%4s%4s%4s%4s%4s%4s%4s%4s %08x %02x %02x %02x %20s\n",
++            while (fscanf(f, "%4s%4s%4s%4s%4s%4s%4s%4s %08x %20s\n",
+                       addr6p[0], addr6p[1], addr6p[2], addr6p[3],
+                       addr6p[4], addr6p[5], addr6p[6], addr6p[7],
+-                  &if_idx, &plen, &scope, &dad_status, devname) == 13) {
++                  &if_idx, devname) == 10) {
+ 
+                 if (strcmp(devname, device) == 0) {
+                     /*
