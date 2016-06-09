@@ -1701,7 +1701,7 @@
 
     <module built_once="True" name="jdk8u">
       <source type="mercurial">
-        <attribute name="post_download" value="cd $SRCDIR ; sh get_source.sh ; chmod +x configure ; cd jdk ; hg checkout 8fe85977d5a6 ; patch -p1 -i $SRCDIR/../../jdk.patch ; cd ../hotspot ; hg checkout 88ae10297731 ; patch -p1 -i $SRCDIR/../../hotspot.patch" />
+        <attribute name="post_download" value="" />
         <attribute name="url" value="http://hg.openjdk.java.net/jdk8u/jdk8u" />
         <attribute name="new_variable" value="" />
         <attribute name="patch" value="" />
@@ -1711,6 +1711,7 @@
       <build type="autotools" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
         <attribute name="configure_arguments" value="./configure --with-extra-cflags='-g -fPIC -U_FORTIFY_SOURCE' --with-extra-cxxflags='-g -fpic -U_FORTIFY_SOURCE' --with-extra-ldflags='-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+        <attribute name="pre_installation" value="cd $SRCDIR ; chmod +x get_source.sh ; ./get_source.sh ; chmod +x configure ; cd jdk ; hg checkout 8fe85977d5a6 ; patch -p1 -i $SRCDIR/../../jdk.patch ; cd ../hotspot ; hg checkout 88ae10297731 ; patch -p1 -i $SRCDIR/../../hotspot.patch"/>
         <attribute name="post_installation" value=""/>
       </build>
     </module>
@@ -1952,9 +1953,9 @@
 </module>
 
     <module name="dce-sdn-1.7">
-      < source type="git">
-        < attribute name="url" value="https://github.com/jaredivey/ns-3-dce-1.7.git"/>
-        < attribute name="module_directory" value="ns-3-dce"/>
+      <source type="git">
+        <attribute name="url" value="https://github.com/jaredivey/ns-3-dce-1.7.git"/>
+        <attribute name="module_directory" value="ns-3-dce"/>
       </source>
       <!-- usual DCE dependencies -->
       <depends_on name="elf-loader" optional="True"/>
@@ -1975,7 +1976,7 @@
       <build type="waf" objdir="build">
         <attribute name="supported_os" value="linux;linux2"/>
         <attribute name="configure_arguments" value="configure --enable-mpi --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR --enable-kernel-stack=$SRCDIR/../net-next-sim-2.6.36/arch --prefix=$INSTALLDIR"/>
-        <attribute name="post_installation" value="mkdir $SRCDIR/files-0 ; ln -s $INSTALLDIR/lib/python2.7 $SRCDIR/files-0/ ; cp -r $SRCDIR/../pox $SRCDIR/files-0/ ; cp $SRCDIR/../ryu/bin/ryu-manager $SRCDIR/files-0/ ; cp -r $SRCDIR/../ryu/ryu $SRCDIR/files-0/; cp -r $SRCDIR/../ryu/etc $SRCDIR/files-0/"/>
+        <attribute name="post_installation" value="mkdir $SRCDIR/files-0 ; ln -s $INSTALLDIR/lib/python2.7 $SRCDIR/files-0/ ; cp -r $SRCDIR/../pox $SRCDIR/files-0/ ; cp $SRCDIR/../ryu/bin/ryu-manager $SRCDIR/files-0/ ; cp -r $SRCDIR/../ryu/ryu $SRCDIR/files-0/; cp -r $SRCDIR/../ryu/etc $SRCDIR/files-0/ ; ln -s $INSTALLDIR/jvm/openjdk-1.8.0-internal $SRCDIR/files-0/ ; cp -r $SRCDIR/myscripts/python/proc $SRCDIR/files-0/ ; cd $SRCDIR/myscripts/python/testscripts ; javac PiDigits.java ; cp PiDigits.class $SRCDIR/files-0/ "/>
       </build>
     </module>
 

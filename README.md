@@ -6,6 +6,7 @@ This repository supplies the patches and configuration file to build the DCE-ena
 1. **Python-2.7.10** (github.com/jaredivey/Python-2.7.10): The dependencies for the POX and Ryu libraries are built directly into this local Python library in order to reduce the possibility of path/dependency issues when running DCE. Additionally, the created Python library will be linked in the files-0 filespace in ns-3-dce in order to be recognizable by a DCE-enabled node in ns-3-dce.
 1. **POX** (github.com/noxrepo/pox): POX will be patched and directly placed in files-0 filespace in ns-3-dce in order to be recognizable by a DCE-enabled node in ns-3-dce.
 1. **Ryu** (github.com/osrg/ryu): Ryu will be patched and directly placed in files-0 filespace in ns-3-dce in order to be recognizable by a DCE-enabled node in ns-3-dce.
+1. **OpenJDK 8** (openjdk.java.net/projects/jdk8u/): OpenJDK will be patched, installed for use in DCE, and linked in the files-0 filespace in ns-3-dce in order to be recognizable by a DCE-enabled node in ns-3-dce.
 
 NOTE: If more than one controller node is to be used, simply make copies of the files-0 directory in ns-3-dce, i.e. files-1, files-2, etc.
 
@@ -24,6 +25,11 @@ It is recommended that a VM be used for testing and experimenting, particularly 
 1. Install readline library (for Python):
   ```
   sudo apt-get install libreadline-dev
+  ```
+
+1. Install OpenJDK dependencies:
+  ```
+  sudo apt-get install openjdk-7-jdk libX11-dev libxext-dev libxtst-dev libxt-dev libcups2-dev libasound2-dev ccache
   ```
 
 1. Get bake:
@@ -46,7 +52,7 @@ It is recommended that a VM be used for testing and experimenting, particularly 
   rm bakefile.xml
   rm bakeSetEnv.sh
   # Bake dce-python-sdn
-  bake.py configure -c bakeconf-sdn.xml -e dce-python-sdn
+  bake.py configure -c bakeconf-sdn.xml -e dce-sdn-1.7
   bake.py download
   bake.py build
   ```
@@ -55,4 +61,10 @@ It is recommended that a VM be used for testing and experimenting, particularly 
   ```
   cd source/ns-3-dce
   ./waf --run "dce-python-sdn --numControllers=1 --numSwitches=4 --numHosts=4"
+  ```
+
+1. Or... Go to the ns-3-dce directory and run another example script to test:
+  ```
+  cd source/ns-3-dce
+  ./waf --run "dce-python-bench --benchmark=7"
   ```
