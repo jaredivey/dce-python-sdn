@@ -1981,6 +1981,38 @@
       </build>
     </module>
 
+    <module name="dce-sdn-cuda-1.7">
+      <source type="git">
+        <attribute name="url" value="https://github.com/jaredivey/ns-3-dce-1.7.git"/>
+        <attribute name="revision" value="cuda" />
+        <attribute name="module_directory" value="ns-3-dce"/>
+      </source>
+      <!-- gVirtuS dependencies -->
+      <depends_on name="cudadr" optional="True"/>
+      <depends_on name="cudart" optional="True"/>
+      <!-- usual DCE dependencies -->
+      <depends_on name="elf-loader" optional="True"/>
+      <depends_on name="libaspect" optional="True"/>
+      <depends_on name="iperf" optional="True"/>
+      <depends_on name="wget" optional="True"/>
+      <depends_on name="thttpd" optional="True"/>
+      <depends_on name="ccnx" optional="True"/>
+      <!-- SDN dependencies -->
+      <depends_on name="Ryu" optional="False"/>
+      <depends_on name="POX" optional="False"/>
+      <depends_on name="ns-3-sdn-3.24" optional="False"/>
+      <depends_on name="net-next-sim-2.6.36" optional="False"/>
+      <depends_on name="Python-2.7.10" optional="True"/>
+      <depends_on name="jdk8u" optional="True"/>
+      <depends_on name="iproute-2.6.38-fix-01" optional="False"/>
+      <depends_on name="bash" optional="True"/>
+      <build type="waf" objdir="build">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="configure_arguments" value="configure --enable-mpi --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR --enable-kernel-stack=$SRCDIR/../net-next-sim-2.6.36/arch --prefix=$INSTALLDIR"/>
+        <attribute name="post_installation" value="mkdir $SRCDIR/files-0 ; ln -s $INSTALLDIR/lib/python2.7 $SRCDIR/files-0/ ; cp -r $SRCDIR/../pox $SRCDIR/files-0/ ; cp $SRCDIR/../ryu/bin/ryu-manager $SRCDIR/files-0/ ; cp -r $SRCDIR/../ryu/ryu $SRCDIR/files-0/; cp -r $SRCDIR/../ryu/etc $SRCDIR/files-0/ ; ln -s $INSTALLDIR/jvm/openjdk-1.8.0-internal $SRCDIR/files-0/ ; mkdir $SRCDIR/files-0/dummies ; cp -r $SRCDIR/myscripts/python/proc $SRCDIR/files-0/ ; cd $SRCDIR/myscripts/python/testscripts ; javac PiDigits.java ; cp PiDigits.class $SRCDIR/files-0/ ; echo '00000000000000000000000000000000' >> $SRCDIR/files-0/key.txt ; echo 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. (Filling up enough extra space to make the file a multiple of 16)' >> $SRCDIR/files-0/hello.txt ; mkdir files-1 ; echo '00000000000000000000000000000000' >> $SRCDIR/files-1/key.txt"/>
+      </build>
+    </module>
+
     <module name="POX">
       <source type="git">
           <attribute name="url" value="https://github.com/noxrepo/pox.git"/>
@@ -2002,6 +2034,42 @@
       <build type="none" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
         <attribute name="patch" value="$SRCDIR/../../ryu.patch"/>
+      </build>
+    </module>
+
+    <module name="cudadr">
+      <source type="git">
+	<attribute name="url" value="git://github.com/jaredivey/gvirtus.cudadr"/>
+        <attribute name="module_directory" value="cudadr"/>
+      </source>
+      <depends_on name="gvirtus" optional="False"/>
+      <build type="autotools" objdir="no">
+	<attribute name="configure_arguments" value="./configure 'CPPFLAGS=-I$SRCDIR/util -isystem /usr/local/cuda/include -I$INSTALLDIR/include/gvirtus' 'LDFLAGS=-pthread -L/usr/local/cuda/lib -L/usr/local/cuda/lib64 -L$INSTALLDIR/lib' --exec-prefix=$INSTALLDIR --prefix=$INSTALLDIR
+"/> 
+      </build>
+    </module>
+
+    <module name="cudart">
+      <source type="git">
+	<attribute name="url" value="git://github.com/jaredivey/gvirtus.cudart"/>
+        <attribute name="module_directory" value="cudart"/>
+      </source>
+      <depends_on name="gvirtus" optional="False"/>
+      <build type="autotools" objdir="no">
+	<attribute name="configure_arguments" value="./configure 'CPPFLAGS=-I$SRCDIR/util -isystem /usr/local/cuda/include -I$INSTALLDIR/include/gvirtus' 'LDFLAGS=-pthread -L/usr/local/cuda/lib -L/usr/local/cuda/lib64 -L$INSTALLDIR/lib' --exec-prefix=$INSTALLDIR --prefix=$INSTALLDIR
+"/> 
+      </build>
+    </module>
+
+    <module name="gvirtus">
+      <source type="git">
+	<attribute name="url" value="git://github.com/jaredivey/gvirtus"/>
+        <attribute name="module_directory" value="gvirtus"/>
+      </source>
+      <build type="autotools" objdir="no">
+	<attribute name="configure_arguments" value="./configure 'CPPFLAGS=-I$SRCDIR/util -isystem /usr/local/cuda/include -I$INSTALLDIR/include/gvirtus' 'LDFLAGS=-pthread -L/usr/local/cuda/lib -L/usr/local/cuda/lib64 -L$INSTALLDIR/lib' --exec-prefix=$INSTALLDIR --prefix=$INSTALLDIR
+"/>
+      <attribute name="post_installation" value="echo 'communicator : afunix:///tmp/gvirtus:0666' > $INSTALLDIR/etc/cudadr.properties ; echo 'plugins : $INSTALLDIR/lib/backend/libcudadr-backend.so' >> $INSTALLDIR/etc/cudadr.properties ; echo 'communicator : tap://128.0.0.1:50' > $INSTALLDIR/etc/cudadr-tap.properties ; echo 'plugins : $INSTALLDIR/lib/backend/libcudadr-backend.so' >> $INSTALLDIR/etc/cudadr-tap.properties ; echo 'communicator : afunix:///tmp/gvirtus:0666' > $INSTALLDIR/etc/cudart.properties ; echo 'plugins : $INSTALLDIR/lib/backend/libcudart-backend.so' >> $INSTALLDIR/etc/cudart.properties ; echo 'communicator : tap://128.0.0.1:50' > $INSTALLDIR/etc/cudart-tap.properties ; echo 'plugins : $INSTALLDIR/lib/backend/libcudart-backend.so' >> $INSTALLDIR/etc/cudart-tap.properties" />
       </build>
     </module>
 
