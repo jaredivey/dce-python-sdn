@@ -1687,15 +1687,107 @@
       </build>
     </module>
 
-    <module built_once="True" name="Python-2.7.10">
+    <module built_once="True" name="Python-2.7.10-git">
       <source type="git">
           <attribute name="url" value="https://github.com/jaredivey/Python-2.7.10.git"/>
-        <attribute name="module_directory" value="Python-2.7.10"/>
+        <attribute name="module_directory" value="Python-2.7.10-git"/>
       </source>
       <build type="autotools" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
-        <attribute name="configure_arguments" value="./configure 'CFLAGS=-g -fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-g -fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+        <attribute name="configure_arguments" value="./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
         <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="Python-2.7.10">
+      <source type="mercurial">
+          <attribute name="url" value="https://hg.python.org/cpython"/>
+        <attribute name="module_directory" value="Python-2.7.10"/>
+        <attribute name="revision" value="v2.7.10" />
+        <attribute name="patch" value="$SRCDIR/../../python-2.7.10.patch" />
+      </source>
+      <depends_on name="greenlet" optional="False"/>
+      <depends_on name="oslo_config" optional="False"/>
+      <depends_on name="netaddr" optional="False"/>
+      <depends_on name="routes" optional="False"/>
+      <depends_on name="webob" optional="False"/>
+      <depends_on name="repoze" optional="False"/>
+      <depends_on name="eventlet" optional="False"/>
+      <build type="autotools" objdir="no">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="configure_arguments" value="./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="greenlet">
+      <source type="archive">
+        <attribute name="url" value="https://pypi.python.org/packages/f2/3f/09412b656067f280cf017ce5b6465e6339089129212425111117be5557d9/greenlet-0.4.10.tar.gz#md5=5351f8ac5196a00d835c2cb1faf75270"/>
+        <attribute name="module_directory" value="greenlet"/>
+      </source>
+      <build type="none" objdir="no">
+        <attribute name="pre_installation" value="cp -r $SRCDIR $SRCDIR/../Python-2.7.10/Modules/"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="eventlet">
+      <source type="archive">
+        <attribute name="url" value="https://pypi.python.org/packages/5a/e8/ac80f330a80c18113df0f4f872fb741974ad2179f8c2a5e3e45f40214cef/eventlet-0.19.0.tar.gz#md5=fde857181347d5b7b921541367a99204"/>
+        <attribute name="module_directory" value="eventlet"/>
+      </source>
+      <build type="none" objdir="no">
+        <attribute name="pre_installation" value="cp -r $SRCDIR/eventlet $SRCDIR/../Python-2.7.10/Lib/"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="oslo_config">
+      <source type="archive">
+        <attribute name="url" value="https://pypi.python.org/packages/e3/2b/f4da5fc091bebda229caece59e81867ab439858ece54b59c1da95501396f/oslo.config-3.12.0.tar.gz#md5=030f1e32a3e80141105e9099b9cb6639"/>
+        <attribute name="module_directory" value="oslo_config"/>
+        <attribute name="patch" value="$SRCDIR/../../oslo_config.patch"/>
+      </source>
+      <build type="none" objdir="no">
+        <attribute name="pre_installation" value="cp -r $SRCDIR/oslo_config $SRCDIR/../Python-2.7.10/Lib/"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="netaddr">
+      <source type="archive">
+        <attribute name="url" value="https://pypi.python.org/packages/7c/ec/104f193e985e0aa813ffb4ba5da78d6ae3200165bf583d522ac2dc40aab2/netaddr-0.7.18.tar.gz#md5=c65bb34f8bedfbbca0b316c490cd13a0"/>
+        <attribute name="module_directory" value="netaddr"/>
+      </source>
+      <build type="none" objdir="no">
+        <attribute name="pre_installation" value="cp -r $SRCDIR/netaddr $SRCDIR/../Python-2.7.10/Lib/"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="routes">
+      <source type="archive">
+        <attribute name="url" value="https://pypi.python.org/packages/96/da/6a61cdab81a76cfc6c5d160cbc11942d6135c19923a6a984969c506a8b82/Routes-2.3.1.tar.gz"/>
+        <attribute name="module_directory" value="routes"/>
+      </source>
+      <build type="none" objdir="no">
+        <attribute name="pre_installation" value="cp -r $SRCDIR/routes $SRCDIR/../Python-2.7.10/Lib/"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="repoze">
+      <source type="archive">
+        <attribute name="url" value="https://pypi.python.org/packages/6e/1e/aa15cc90217e086dc8769872c8778b409812ff036bf021b15795638939e4/repoze.lru-0.6.tar.gz#md5=2c3b64b17a8e18b405f55d46173e14dd"/>
+        <attribute name="module_directory" value="repoze"/>
+      </source>
+      <build type="none" objdir="no">
+        <attribute name="pre_installation" value="cp -r $SRCDIR/repoze $SRCDIR/../Python-2.7.10/Lib/"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="webob">
+      <source type="archive">
+        <attribute name="url" value="https://pypi.python.org/packages/5d/c7/7c1565b188d8d32bf3657a24b9d71621e35ba20ec4179a0a7f9803511099/WebOb-1.6.1.tar.gz#md5=04049d82e9d12dd91f6f46f54cc826aa"/>
+        <attribute name="module_directory" value="webob"/>
+      </source>
+      <build type="none" objdir="no">
+        <attribute name="pre_installation" value="cp -r $SRCDIR/webob $SRCDIR/../Python-2.7.10/Lib/"/>
       </build>
     </module>
 

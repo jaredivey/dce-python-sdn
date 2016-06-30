@@ -1,0 +1,15 @@
+diff --git a/oslo_config/cfg.py b/oslo_config/cfg.py
+index d3ecd15..7eddecb 100644
+--- a/oslo_config/cfg.py
++++ b/oslo_config/cfg.py
+@@ -538,8 +538,8 @@ def _get_config_dirs(project=None):
+       /etc/
+     """
+     cfg_dirs = [
+-        _fixpath(os.path.join('~', '.' + project)) if project else None,
+-        _fixpath('~'),
++        #_fixpath(os.path.join('~', '.' + project)) if project else None,
++        #_fixpath('~'),
+         os.path.join('/etc', project) if project else None,
+         '/etc'
+     ]

@@ -1,0 +1,202 @@
+diff -r 15c95b7d81dc Makefile.pre.in
+--- a/Makefile.pre.in	Sat May 23 11:02:14 2015 -0500
++++ b/Makefile.pre.in	Thu Jun 30 14:34:11 2016 -0400
+@@ -970,6 +970,9 @@
+ 		encodings compiler hotshot \
+ 		email email/mime email/test email/test/data \
+ 		ensurepip ensurepip/_bundled \
++		eventlet \
++		eventlet/green eventlet/green/http eventlet/green/OpenSSL eventlet/green/urllib \
++		eventlet/greenio eventlet/hubs eventlet/support \
+ 		json json/tests \
+ 		sqlite3 sqlite3/test \
+ 		logging bsddb bsddb/test csv importlib wsgiref \
+@@ -979,6 +982,9 @@
+ 		idlelib idlelib/Icons idlelib/idle_test \
+ 		distutils distutils/command distutils/tests $(XMLLIBSUBDIRS) \
+ 		multiprocessing multiprocessing/dummy \
++		netaddr netaddr/eui netaddr/ip netaddr/strategy netaddr/tools \
++		oslo_config routes webob \
++		repoze repoze/lru \
+ 		unittest unittest/test \
+ 		lib-old \
+ 		curses pydoc_data $(MACHDEPS)
+diff -r 15c95b7d81dc Modules/Setup.dist
+--- a/Modules/Setup.dist	Sat May 23 11:02:14 2015 -0500
++++ b/Modules/Setup.dist	Thu Jun 30 14:34:11 2016 -0400
+@@ -163,77 +163,77 @@
+ # it, depending on your system -- see the GNU readline instructions.
+ # It's okay for this to be a shared library, too.
+ 
+-#readline readline.c -lreadline -ltermcap
++readline readline.c -lreadline -ltermcap
+ 
+ 
+ # Modules that should always be present (non UNIX dependent):
+ 
+-#array arraymodule.c	# array objects
+-#cmath cmathmodule.c _math.c # -lm # complex math library functions
+-#math mathmodule.c _math.c # -lm # math library functions, e.g. sin()
+-#_struct _struct.c	# binary structure packing/unpacking
+-#time timemodule.c # -lm # time operations and variables
+-#operator operator.c	# operator.add() and similar goodies
++array arraymodule.c	# array objects
++cmath cmathmodule.c _math.c # -lm # complex math library functions
++math mathmodule.c _math.c # -lm # math library functions, e.g. sin()
++_struct _struct.c	# binary structure packing/unpacking
++time timemodule.c # -lm # time operations and variables
++operator operator.c	# operator.add() and similar goodies
+ #_testcapi _testcapimodule.c    # Python C API test module
+-#_random _randommodule.c	# Random number generator
+-#_collections _collectionsmodule.c # Container types
+-#_heapq _heapqmodule.c		# Heapq type
+-#itertools itertoolsmodule.c	# Functions creating iterators for efficient looping 
+-#strop stropmodule.c		# String manipulations
+-#_functools _functoolsmodule.c	# Tools for working with functions and callable objects
+-#_elementtree -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DUSE_PYEXPAT_CAPI _elementtree.c	# elementtree accelerator
++_random _randommodule.c	# Random number generator
++_collections _collectionsmodule.c # Container types
++_heapq _heapqmodule.c		# Heapq type
++itertools itertoolsmodule.c	# Functions creating iterators for efficient looping 
++strop stropmodule.c		# String manipulations
++_functools _functoolsmodule.c	# Tools for working with functions and callable objects
++_elementtree -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DUSE_PYEXPAT_CAPI _elementtree.c	# elementtree accelerator
+ #_pickle _pickle.c	# pickle accelerator
+-#datetime datetimemodule.c	# date/time type
+-#_bisect _bisectmodule.c	# Bisection algorithms
++datetime datetimemodule.c	# date/time type
++_bisect _bisectmodule.c	# Bisection algorithms
+ 
+-#unicodedata unicodedata.c    # static Unicode character database
++unicodedata unicodedata.c    # static Unicode character database
+ 
+ # access to ISO C locale support
+-#_locale _localemodule.c  # -lintl
++_locale _localemodule.c  # -lintl
+ 
+ # Standard I/O baseline
+-#_io -I$(srcdir)/Modules/_io _io/bufferedio.c _io/bytesio.c _io/fileio.c _io/iobase.c _io/_iomodule.c _io/stringio.c _io/textio.c
++_io -I$(srcdir)/Modules/_io _io/bufferedio.c _io/bytesio.c _io/fileio.c _io/iobase.c _io/_iomodule.c _io/stringio.c _io/textio.c
+ 
+ 
+ # Modules with some UNIX dependencies -- on by default:
+ # (If you have a really backward UNIX, select and socket may not be
+ # supported...)
+ 
+-#fcntl fcntlmodule.c	# fcntl(2) and ioctl(2)
+-#spwd spwdmodule.c		# spwd(3) 
+-#grp grpmodule.c		# grp(3)
+-#select selectmodule.c	# select(2); not on ancient System V
++fcntl fcntlmodule.c	# fcntl(2) and ioctl(2)
++spwd spwdmodule.c		# spwd(3) 
++grp grpmodule.c		# grp(3)
++select selectmodule.c	# select(2); not on ancient System V
+ 
+ # Memory-mapped files (also works on Win32).
+-#mmap mmapmodule.c
++mmap mmapmodule.c
+ 
+ # CSV file helper
+-#_csv _csv.c
++_csv _csv.c
+ 
+ # Socket module helper for socket(2)
+-#_socket socketmodule.c timemodule.c
++_socket socketmodule.c timemodule.c
+ 
+ # Socket module helper for SSL support; you must comment out the other
+ # socket line above, and possibly edit the SSL variable:
+ #SSL=/usr/local/ssl
+-#_ssl _ssl.c \
+-#	-DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \
+-#	-L$(SSL)/lib -lssl -lcrypto
++_ssl _ssl.c \
++	-DUSE_SSL -I/usr/include -I/usr/include/openssl -I/usr/include/x86_64-linux-gnu \
++	-L/usr/lib/x86_64-linux-gnu -lssl -lcrypto
+ 
+ # The crypt module is now disabled by default because it breaks builds
+ # on many systems (where -lcrypt is needed), e.g. Linux (I believe).
+ #
+ # First, look at Setup.config; configure may have set this for you.
+ 
+-#crypt cryptmodule.c # -lcrypt	# crypt(3); needs -lcrypt on some systems
++crypt cryptmodule.c -lcrypt	# crypt(3); needs -lcrypt on some systems
+ 
+ 
+ # Some more UNIX dependent modules -- off by default, since these
+ # are not supported by all UNIX systems:
+ 
+ #nis nismodule.c -lnsl	# Sun yellow pages -- not everywhere
+-#termios termios.c	# Steen Lumholt's termios module
+-#resource resource.c	# Jeremy Hylton's rlimit interface
++termios termios.c	# Steen Lumholt's termios module
++resource resource.c	# Jeremy Hylton's rlimit interface
+ 
+ 
+ # Multimedia modules -- off by default.
+@@ -252,14 +252,14 @@
+ # Message-Digest Algorithm, described in RFC 1321.  The necessary files
+ # md5.c and md5.h are included here.
+ 
+-#_md5 md5module.c md5.c
++_md5 md5module.c md5.c
+ 
+ 
+ # The _sha module implements the SHA checksum algorithms.
+ # (NIST's Secure Hash Algorithms.)
+-#_sha shamodule.c
+-#_sha256 sha256module.c
+-#_sha512 sha512module.c
++_sha shamodule.c
++_sha256 sha256module.c
++_sha512 sha512module.c
+ 
+ 
+ # SGI IRIX specific modules -- off by default.
+@@ -434,14 +434,14 @@
+ 
+ 
+ # Helper module for various ascii-encoders
+-#binascii binascii.c
++binascii binascii.c
+ 
+ # Fred Drake's interface to the Python parser
+-#parser parsermodule.c
++parser parsermodule.c
+ 
+ # cStringIO and cPickle
+-#cStringIO cStringIO.c
+-#cPickle cPickle.c
++cStringIO cStringIO.c
++cPickle cPickle.c
+ 
+ 
+ # Lee Busby's SIGFPE modules.
+@@ -464,7 +464,7 @@
+ # Andrew Kuchling's zlib module.
+ # This require zlib 1.1.3 (or later).
+ # See http://www.gzip.org/zlib/
+-#zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
++zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
+ 
+ # Interface to the Expat XML parser
+ #
+@@ -497,3 +497,6 @@
+ 
+ # Another example -- the 'xxsubtype' module shows C-level subtyping in action
+ xxsubtype xxsubtype.c
++
++# Greenlet module
++greenlet greenlet/greenlet.c
+diff -r 15c95b7d81dc setup.py
+--- a/setup.py	Sat May 23 11:02:14 2015 -0500
++++ b/setup.py	Thu Jun 30 14:34:11 2016 -0400
+@@ -2105,7 +2105,7 @@
+         if host_platform == 'darwin':
+             # OS X 10.5 comes with libffi.dylib; the include files are
+             # in /usr/include/ffi
+-            inc_dirs.append('/usr/include/ffi')
++            inc_dirs.append('/usr/include/x86_64-linux-gnu/ffi')
+ 
+         ffi_inc = [sysconfig.get_config_var("LIBFFI_INCLUDEDIR")]
+         if not ffi_inc or ffi_inc[0] == '':
