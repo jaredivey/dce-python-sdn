@@ -1,17 +1,32 @@
+diff -r 15c95b7d81dc Lib/posixpath.py
+--- a/Lib/posixpath.py	Sat May 23 11:02:14 2015 -0500
++++ b/Lib/posixpath.py	Wed Jul 27 17:49:27 2016 -0400
+@@ -259,7 +259,7 @@
+     if i == 1:
+         if 'HOME' not in os.environ:
+             import pwd
+-            userhome = pwd.getpwuid(os.getuid()).pw_dir
++            userhome = '/' #pwd.getpwuid(os.getuid()).pw_dir
+         else:
+             userhome = os.environ['HOME']
+     else:
 diff -r 15c95b7d81dc Makefile.pre.in
 --- a/Makefile.pre.in	Sat May 23 11:02:14 2015 -0500
-+++ b/Makefile.pre.in	Thu Jun 30 14:34:11 2016 -0400
-@@ -970,6 +970,9 @@
++++ b/Makefile.pre.in	Wed Jul 27 17:49:27 2016 -0400
+@@ -970,6 +970,12 @@
  		encodings compiler hotshot \
  		email email/mime email/test email/test/data \
  		ensurepip ensurepip/_bundled \
++        setuptools setuptools/command setuptools/extern \
++        pkg_resources \
++        pkg_resources/_vendor pkg_resources/_vendor/packaging pkg_resources/extern \
 +		eventlet \
 +		eventlet/green eventlet/green/http eventlet/green/OpenSSL eventlet/green/urllib \
 +		eventlet/greenio eventlet/hubs eventlet/support \
  		json json/tests \
  		sqlite3 sqlite3/test \
  		logging bsddb bsddb/test csv importlib wsgiref \
-@@ -979,6 +982,9 @@
+@@ -979,6 +985,9 @@
  		idlelib idlelib/Icons idlelib/idle_test \
  		distutils distutils/command distutils/tests $(XMLLIBSUBDIRS) \
  		multiprocessing multiprocessing/dummy \
@@ -23,7 +38,7 @@ diff -r 15c95b7d81dc Makefile.pre.in
  		curses pydoc_data $(MACHDEPS)
 diff -r 15c95b7d81dc Modules/Setup.dist
 --- a/Modules/Setup.dist	Sat May 23 11:02:14 2015 -0500
-+++ b/Modules/Setup.dist	Thu Jun 30 14:34:11 2016 -0400
++++ b/Modules/Setup.dist	Wed Jul 27 17:49:27 2016 -0400
 @@ -163,77 +163,77 @@
  # it, depending on your system -- see the GNU readline instructions.
  # It's okay for this to be a shared library, too.
@@ -190,7 +205,7 @@ diff -r 15c95b7d81dc Modules/Setup.dist
 +greenlet greenlet/greenlet.c
 diff -r 15c95b7d81dc setup.py
 --- a/setup.py	Sat May 23 11:02:14 2015 -0500
-+++ b/setup.py	Thu Jun 30 14:34:11 2016 -0400
++++ b/setup.py	Wed Jul 27 17:49:27 2016 -0400
 @@ -2105,7 +2105,7 @@
          if host_platform == 'darwin':
              # OS X 10.5 comes with libffi.dylib; the include files are
