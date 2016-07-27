@@ -1715,7 +1715,7 @@
       <depends_on name="eventlet" optional="False"/>
       <build type="autotools" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
-        <attribute name="configure_arguments" value="./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LDFLAGS=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+        <attribute name="configure_arguments" value="./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
         <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10"/>
       </build>
     </module>
