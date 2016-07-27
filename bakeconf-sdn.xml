@@ -1742,7 +1742,7 @@
 
     <module built_once="True" name="oslo_config">
       <source type="archive">
-        <attribute name="url" value="https://pypi.python.org/packages/e3/2b/f4da5fc091bebda229caece59e81867ab439858ece54b59c1da95501396f/oslo.config-3.12.0.tar.gz#md5=030f1e32a3e80141105e9099b9cb6639"/>
+        <attribute name="url" value="https://pypi.python.org/packages/ea/02/fb0714cb398e5f46fa82d43ae1afb000fe998dbe2779a6e2622482a2f4ac/oslo.config-3.3.0.tar.gz#md5=e54771cb1b7690fcd30ad41eebf43c26"/>
         <attribute name="module_directory" value="oslo_config"/>
         <attribute name="patch" value="$SRCDIR/../../oslo_config.patch"/>
       </source>
