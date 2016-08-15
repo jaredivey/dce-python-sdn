@@ -1,0 +1,713 @@
+diff --git a/numpy/core/__init__.py b/numpy/core/__init__.py
+index 1ac8500..e70162d 100644
+--- a/numpy/core/__init__.py
++++ b/numpy/core/__init__.py
+@@ -13,7 +13,7 @@ for envkey in ['OPENBLAS_MAIN_FREE', 'GOTOBLAS_MAIN_FREE']:
+         env_added.append(envkey)
+ 
+ try:
+-    from . import multiarray
++    import multiarray
+ except ImportError:
+     msg = """
+ Importing the multiarray numpy extension module failed.  Most
+@@ -23,13 +23,13 @@ files not under version control).  Otherwise reinstall numpy.
+ """
+     raise ImportError(msg)
+ 
+-for envkey in env_added:
+-    del os.environ[envkey]
+-del envkey
+-del env_added
+-del os
++#for envkey in env_added:
++#    del os.environ[envkey]
++#del envkey
++#del env_added
++#del os
+ 
+-from . import umath
++import umath
+ from . import _internal  # for freeze programs
+ from . import numerictypes as nt
+ multiarray.set_typeDict(nt.sctypeDict)
+diff --git a/numpy/core/_internal.py b/numpy/core/_internal.py
+index 85be66d..2b25dcc 100644
+--- a/numpy/core/_internal.py
++++ b/numpy/core/_internal.py
+@@ -10,7 +10,7 @@ import re
+ import sys
+ 
+ from numpy.compat import asbytes, basestring
+-from .multiarray import dtype, array, ndarray
++from multiarray import dtype, array, ndarray
+ import ctypes
+ from .numerictypes import object_
+ 
+diff --git a/numpy/core/_methods.py b/numpy/core/_methods.py
+index 5fc2bc4..ce31e11 100644
+--- a/numpy/core/_methods.py
++++ b/numpy/core/_methods.py
+@@ -7,8 +7,8 @@ from __future__ import division, absolute_import, print_function
+ 
+ import warnings
+ 
+-from numpy.core import multiarray as mu
+-from numpy.core import umath as um
++import multiarray as mu
++import umath as um
+ from numpy.core.numeric import asanyarray
+ from numpy.core import numerictypes as nt
+ 
+diff --git a/numpy/core/arrayprint.py b/numpy/core/arrayprint.py
+index 282fbd1..67096f3 100644
+--- a/numpy/core/arrayprint.py
++++ b/numpy/core/arrayprint.py
+@@ -18,8 +18,8 @@ __docformat__ = 'restructuredtext'
+ import sys
+ from functools import reduce
+ from . import numerictypes as _nt
+-from .umath import maximum, minimum, absolute, not_equal, isnan, isinf
+-from .multiarray import (array, format_longfloat, datetime_as_string,
++from umath import maximum, minimum, absolute, not_equal, isnan, isinf
++from multiarray import (array, format_longfloat, datetime_as_string,
+                          datetime_data)
+ from .fromnumeric import ravel
+ from .numeric import asarray
+@@ -577,7 +577,10 @@ class FloatFormat(object):
+             else:
+                 precision = 0
+             precision = min(self.precision, precision)
+-            self.max_str_len = len(str(int(max_val))) + precision + 2
++            if isnan(max_val):
++                self.max_str_len = precision + 2
++            else:
++                self.max_str_len = len(str(int(max_val))) + precision + 2
+             if _nc.any(special):
+                 self.max_str_len = max(self.max_str_len,
+                                        len(_nan_str),
+diff --git a/numpy/core/code_generators/generate_numpy_api.py b/numpy/core/code_generators/generate_numpy_api.py
+index d376ffd..5157f82 100644
+--- a/numpy/core/code_generators/generate_numpy_api.py
++++ b/numpy/core/code_generators/generate_numpy_api.py
+@@ -46,11 +46,11 @@ static int
+ _import_array(void)
+ {
+   int st;
+-  PyObject *numpy = PyImport_ImportModule("numpy.core.multiarray");
++  PyObject *numpy = PyImport_ImportModule("multiarray");
+   PyObject *c_api = NULL;
+ 
+   if (numpy == NULL) {
+-      PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import");
++      PyErr_SetString(PyExc_ImportError, "multiarray failed to import");
+       return -1;
+   }
+   c_api = PyObject_GetAttrString(numpy, "_ARRAY_API");
+@@ -127,9 +127,9 @@ _import_array(void)
+ #define NUMPY_IMPORT_ARRAY_RETVAL
+ #endif
+ 
+-#define import_array() {if (_import_array() < 0) {PyErr_Print(); PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import"); return NUMPY_IMPORT_ARRAY_RETVAL; } }
++#define import_array() {if (_import_array() < 0) {PyErr_Print(); PyErr_SetString(PyExc_ImportError, "multiarray failed to import"); return NUMPY_IMPORT_ARRAY_RETVAL; } }
+ 
+-#define import_array1(ret) {if (_import_array() < 0) {PyErr_Print(); PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import"); return ret; } }
++#define import_array1(ret) {if (_import_array() < 0) {PyErr_Print(); PyErr_SetString(PyExc_ImportError, "multiarray failed to import"); return ret; } }
+ 
+ #define import_array2(msg, ret) {if (_import_array() < 0) {PyErr_Print(); PyErr_SetString(PyExc_ImportError, msg); return ret; } }
+ 
+diff --git a/numpy/core/code_generators/generate_ufunc_api.py b/numpy/core/code_generators/generate_ufunc_api.py
+index bb2ad78..5e9e8d3 100644
+--- a/numpy/core/code_generators/generate_ufunc_api.py
++++ b/numpy/core/code_generators/generate_ufunc_api.py
+@@ -36,11 +36,11 @@ static void **PyUFunc_API=NULL;
+ static NPY_INLINE int
+ _import_umath(void)
+ {
+-  PyObject *numpy = PyImport_ImportModule("numpy.core.umath");
++  PyObject *numpy = PyImport_ImportModule("umath");
+   PyObject *c_api = NULL;
+ 
+   if (numpy == NULL) {
+-      PyErr_SetString(PyExc_ImportError, "numpy.core.umath failed to import");
++      PyErr_SetString(PyExc_ImportError, "umath failed to import");
+       return -1;
+   }
+   c_api = PyObject_GetAttrString(numpy, "_UFUNC_API");
+@@ -85,7 +85,7 @@ _import_umath(void)
+         if (_import_umath() < 0) {\
+             PyErr_Print();\
+             PyErr_SetString(PyExc_ImportError,\
+-                    "numpy.core.umath failed to import");\
++                    "umath failed to import");\
+             return NUMPY_IMPORT_UMATH_RETVAL;\
+         }\
+     } while(0)
+@@ -96,7 +96,7 @@ _import_umath(void)
+         if (_import_umath() < 0) {\
+             PyErr_Print();\
+             PyErr_SetString(PyExc_ImportError,\
+-                    "numpy.core.umath failed to import");\
++                    "umath failed to import");\
+             return ret;\
+         }\
+     } while(0)
+@@ -117,7 +117,7 @@ _import_umath(void)
+         if (_import_umath() < 0) {\
+             PyErr_Print();\
+             PyErr_SetString(PyExc_ImportError,\
+-                    "numpy.core.umath failed to import");\
++                    "umath failed to import");\
+         }\
+     } while(0)
+ 
+diff --git a/numpy/core/defchararray.py b/numpy/core/defchararray.py
+index e18f912..987bf23 100644
+--- a/numpy/core/defchararray.py
++++ b/numpy/core/defchararray.py
+@@ -21,7 +21,7 @@ import sys
+ from .numerictypes import string_, unicode_, integer, object_, bool_, character
+ from .numeric import ndarray, compare_chararrays
+ from .numeric import array as narray
+-from numpy.core.multiarray import _vec_string
++from multiarray import _vec_string
+ from numpy.compat import asbytes, long
+ import numpy
+ 
+diff --git a/numpy/core/fromnumeric.py b/numpy/core/fromnumeric.py
+index d07c5c0..5a3cd19 100644
+--- a/numpy/core/fromnumeric.py
++++ b/numpy/core/fromnumeric.py
+@@ -8,8 +8,8 @@ import warnings
+ 
+ import numpy as np
+ from .. import VisibleDeprecationWarning
+-from . import multiarray as mu
+-from . import umath as um
++import multiarray as mu
++import umath as um
+ from . import numerictypes as nt
+ from .numeric import asarray, array, asanyarray, concatenate
+ from . import _methods
+diff --git a/numpy/core/include/numpy/oldnumeric.h b/numpy/core/include/numpy/oldnumeric.h
+index 748f06d..4f1c768 100644
+--- a/numpy/core/include/numpy/oldnumeric.h
++++ b/numpy/core/include/numpy/oldnumeric.h
+@@ -20,4 +20,4 @@
+ #define SAVESPACEBIT 0
+ 
+ #undef import_array
+-#define import_array() { if (_import_array() < 0) {PyErr_Print(); PyErr_SetString(PyExc_ImportError, "numpy.core.multiarray failed to import"); } }
++#define import_array() { if (_import_array() < 0) {PyErr_Print(); PyErr_SetString(PyExc_ImportError, "multiarray failed to import"); } }
+diff --git a/numpy/core/numeric.py b/numpy/core/numeric.py
+index b3eed97..634cbac 100644
+--- a/numpy/core/numeric.py
++++ b/numpy/core/numeric.py
+@@ -6,8 +6,8 @@ import operator
+ import sys
+ import warnings
+ 
+-from . import multiarray
+-from .multiarray import (
++import multiarray
++from multiarray import (
+     _fastCopyAndTranspose as fastCopyAndTranspose, ALLOW_THREADS,
+     BUFSIZE, CLIP, MAXDIMS, MAY_SHARE_BOUNDS, MAY_SHARE_EXACT, RAISE,
+     WRAP, arange, array, broadcast, can_cast, compare_chararrays,
+@@ -18,10 +18,10 @@ from .multiarray import (
+     putmask, result_type, set_numeric_ops, shares_memory, vdot, where,
+     zeros)
+ if sys.version_info[0] < 3:
+-    from .multiarray import newbuffer, getbuffer
++    from multiarray import newbuffer, getbuffer
+ 
+-from . import umath
+-from .umath import (invert, sin, UFUNC_BUFSIZE_DEFAULT, ERR_IGNORE,
++import umath
++from umath import (invert, sin, UFUNC_BUFSIZE_DEFAULT, ERR_IGNORE,
+                     ERR_WARN, ERR_RAISE, ERR_CALL, ERR_PRINT, ERR_LOG,
+                     ERR_DEFAULT, PINF, NAN)
+ from . import numerictypes
+@@ -3017,7 +3017,7 @@ nan = NaN = NAN
+ False_ = bool_(False)
+ True_ = bool_(True)
+ 
+-from .umath import *
++from umath import *
+ from .numerictypes import *
+ from . import fromnumeric
+ from .fromnumeric import *
+diff --git a/numpy/core/numerictypes.py b/numpy/core/numerictypes.py
+index 600d5af..2f3f22d 100644
+--- a/numpy/core/numerictypes.py
++++ b/numpy/core/numerictypes.py
+@@ -87,7 +87,7 @@ import sys
+ import numbers
+ 
+ from numpy.compat import bytes, long
+-from numpy.core.multiarray import (
++from multiarray import (
+         typeinfo, ndarray, array, empty, dtype, datetime_data,
+         datetime_as_string, busday_offset, busday_count, is_busday,
+         busdaycalendar
+diff --git a/numpy/core/src/multiarray/datetime.c b/numpy/core/src/multiarray/datetime.c
+index 3cf9a2b..183ca58 100644
+--- a/numpy/core/src/multiarray/datetime.c
++++ b/numpy/core/src/multiarray/datetime.c
+@@ -9,6 +9,8 @@
+ 
+ #define PY_SSIZE_T_CLEAN
+ #include <Python.h>
++
++#undef Py_BUILD_CORE
+ #include <datetime.h>
+ 
+ #include <time.h>
+@@ -24,6 +26,7 @@
+ #include "methods.h"
+ #include "_datetime.h"
+ #include "datetime_strings.h"
++#define Py_BUILD_CORE
+ 
+ /*
+  * Imports the PyDateTime functions so we can create these objects.
+diff --git a/numpy/core/src/multiarray/descriptor.c b/numpy/core/src/multiarray/descriptor.c
+index fbfda72..77ff7da 100644
+--- a/numpy/core/src/multiarray/descriptor.c
++++ b/numpy/core/src/multiarray/descriptor.c
+@@ -2304,7 +2304,7 @@ arraydescr_reduce(PyArray_Descr *self, PyObject *NPY_UNUSED(args))
+     if (ret == NULL) {
+         return NULL;
+     }
+-    mod = PyImport_ImportModule("numpy.core.multiarray");
++    mod = PyImport_ImportModule("multiarray");
+     if (mod == NULL) {
+         Py_DECREF(ret);
+         return NULL;
+diff --git a/numpy/core/src/multiarray/methods.c b/numpy/core/src/multiarray/methods.c
+index 6346906..ac7eebd 100644
+--- a/numpy/core/src/multiarray/methods.c
++++ b/numpy/core/src/multiarray/methods.c
+@@ -1513,7 +1513,7 @@ array_reduce(PyArrayObject *self, PyObject *NPY_UNUSED(args))
+     if (ret == NULL) {
+         return NULL;
+     }
+-    mod = PyImport_ImportModule("numpy.core.multiarray");
++    mod = PyImport_ImportModule("multiarray");
+     if (mod == NULL) {
+         Py_DECREF(ret);
+         return NULL;
+@@ -2005,7 +2005,7 @@ array_dot(PyArrayObject *self, PyObject *args, PyObject *kwds)
+     }
+ 
+     if (cached_npy_dot == NULL) {
+-        PyObject *module = PyImport_ImportModule("numpy.core.multiarray");
++        PyObject *module = PyImport_ImportModule("multiarray");
+         cached_npy_dot = (PyUFuncObject*)PyDict_GetItemString(
+                                               PyModule_GetDict(module), "dot");
+ 
+diff --git a/numpy/core/src/multiarray/multiarraymodule.c b/numpy/core/src/multiarray/multiarraymodule.c
+index 62b5628..af3158a 100644
+--- a/numpy/core/src/multiarray/multiarraymodule.c
++++ b/numpy/core/src/multiarray/multiarraymodule.c
+@@ -2155,7 +2155,7 @@ array_matrixproduct(PyObject *NPY_UNUSED(dummy), PyObject *args, PyObject* kwds)
+     char* kwlist[] = {"a", "b", "out", NULL };
+ 
+     if (cached_npy_dot == NULL) {
+-        PyObject *module = PyImport_ImportModule("numpy.core.multiarray");
++        PyObject *module = PyImport_ImportModule("multiarray");
+         cached_npy_dot = (PyUFuncObject*)PyDict_GetItemString(
+                                               PyModule_GetDict(module), "dot");
+ 
+@@ -2332,7 +2332,7 @@ array_matmul(PyObject *NPY_UNUSED(m), PyObject *args, PyObject* kwds)
+     char *subscripts;
+     PyArrayObject *ops[2];
+ 
+-    npy_cache_import("numpy.core.multiarray", "matmul", &matmul);
++    npy_cache_import("multiarray", "matmul", &matmul);
+     if (matmul == NULL) {
+         return NULL;
+     }
+
+diff --git a/numpy/core/src/multiarray/number.c b/numpy/core/src/multiarray/number.c
+index fec015a..5cfe480 100644
+--- a/numpy/core/src/multiarray/number.c
++++ b/numpy/core/src/multiarray/number.c
+@@ -397,7 +397,7 @@ array_matrix_multiply(PyArrayObject *m1, PyObject *m2)
+ {
+     static PyObject *matmul = NULL;
+ 
+-    npy_cache_import("numpy.core.multiarray", "matmul", &matmul);
++    npy_cache_import("multiarray", "matmul", &matmul);
+     if (matmul == NULL) {
+         return NULL;
+     }
+diff --git a/numpy/core/tests/test_defchararray.py b/numpy/core/tests/test_defchararray.py
+index e828b87..2239d9c 100644
+--- a/numpy/core/tests/test_defchararray.py
++++ b/numpy/core/tests/test_defchararray.py
+@@ -3,7 +3,7 @@ from __future__ import division, absolute_import, print_function
+ import sys
+ 
+ import numpy as np
+-from numpy.core.multiarray import _vec_string
++from multiarray import _vec_string
+ from numpy.compat import asbytes, asbytes_nested, sixu
+ from numpy.testing import (
+     TestCase, run_module_suite, assert_, assert_equal, assert_array_equal
+
+diff --git a/numpy/core/tests/test_multiarray.py b/numpy/core/tests/test_multiarray.py
+index 9446f0a..daa6e2c 100644
+--- a/numpy/core/tests/test_multiarray.py
++++ b/numpy/core/tests/test_multiarray.py
+@@ -3067,7 +3067,7 @@ class TestPickling(TestCase):
+         assert_equal(a, p)
+ 
+     def test_subarray_int_shape(self):
+-        s = "cnumpy.core.multiarray\n_reconstruct\np0\n(cnumpy\nndarray\np1\n(I0\ntp2\nS'b'\np3\ntp4\nRp5\n(I1\n(I1\ntp6\ncnumpy\ndtype\np7\n(S'V6'\np8\nI0\nI1\ntp9\nRp10\n(I3\nS'|'\np11\nN(S'a'\np12\ng3\ntp13\n(dp14\ng12\n(g7\n(S'V4'\np15\nI0\nI1\ntp16\nRp17\n(I3\nS'|'\np18\n(g7\n(S'i1'\np19\nI0\nI1\ntp20\nRp21\n(I3\nS'|'\np22\nNNNI-1\nI-1\nI0\ntp23\nb(I2\nI2\ntp24\ntp25\nNNI4\nI1\nI0\ntp26\nbI0\ntp27\nsg3\n(g7\n(S'V2'\np28\nI0\nI1\ntp29\nRp30\n(I3\nS'|'\np31\n(g21\nI2\ntp32\nNNI2\nI1\nI0\ntp33\nbI4\ntp34\nsI6\nI1\nI0\ntp35\nbI00\nS'\\x01\\x01\\x01\\x01\\x01\\x02'\np36\ntp37\nb."
++        s = "cmultiarray\n_reconstruct\np0\n(cnumpy\nndarray\np1\n(I0\ntp2\nS'b'\np3\ntp4\nRp5\n(I1\n(I1\ntp6\ncnumpy\ndtype\np7\n(S'V6'\np8\nI0\nI1\ntp9\nRp10\n(I3\nS'|'\np11\nN(S'a'\np12\ng3\ntp13\n(dp14\ng12\n(g7\n(S'V4'\np15\nI0\nI1\ntp16\nRp17\n(I3\nS'|'\np18\n(g7\n(S'i1'\np19\nI0\nI1\ntp20\nRp21\n(I3\nS'|'\np22\nNNNI-1\nI-1\nI0\ntp23\nb(I2\nI2\ntp24\ntp25\nNNI4\nI1\nI0\ntp26\nbI0\ntp27\nsg3\n(g7\n(S'V2'\np28\nI0\nI1\ntp29\nRp30\n(I3\nS'|'\np31\n(g21\nI2\ntp32\nNNI2\nI1\nI0\ntp33\nbI4\ntp34\nsI6\nI1\nI0\ntp35\nbI00\nS'\\x01\\x01\\x01\\x01\\x01\\x02'\np36\ntp37\nb."
+         a = np.array([(1, (1, 2))], dtype=[('a', 'i1', (2, 2)), ('b', 'i1', 2)])
+         p = self._loads(asbytes(s))
+         assert_equal(a, p)
+@@ -4704,7 +4704,7 @@ class TestDot(TestCase):
+         assert_equal(zeros[1].array, zeros_test[1].array)
+ 
+     def test_dot_2args(self):
+-        from numpy.core.multiarray import dot
++        from multiarray import dot
+ 
+         a = np.array([[1, 2], [3, 4]], dtype=float)
+         b = np.array([[1, 0], [1, 1]], dtype=float)
+@@ -4714,7 +4714,7 @@ class TestDot(TestCase):
+         assert_allclose(c, d)
+ 
+     def test_dot_3args(self):
+-        from numpy.core.multiarray import dot
++        from multiarray import dot
+ 
+         np.random.seed(22)
+         f = np.random.random_sample((1024, 16))
+@@ -4735,7 +4735,7 @@ class TestDot(TestCase):
+         assert_array_equal(r2, r)
+ 
+     def test_dot_3args_errors(self):
+-        from numpy.core.multiarray import dot
++        from multiarray import dot
+ 
+         np.random.seed(22)
+         f = np.random.random_sample((1024, 16))
+@@ -5633,7 +5633,7 @@ class TestMinScalarType(object):
+ 
+ 
+ if sys.version_info[:2] == (2, 6):
+-    from numpy.core.multiarray import memorysimpleview as memoryview
++    from multiarray import memorysimpleview as memoryview
+ 
+ from numpy.core._internal import _dtype_from_pep3118
+ 
+diff --git a/numpy/core/tests/test_numeric.py b/numpy/core/tests/test_numeric.py
+index 7fdbbc9..637c24b 100644
+--- a/numpy/core/tests/test_numeric.py
++++ b/numpy/core/tests/test_numeric.py
+@@ -7,7 +7,7 @@ import platform
+ from decimal import Decimal
+ 
+ import numpy as np
+-from numpy.core import umath
++import umath
+ from numpy.random import rand, randint, randn
+ from numpy.testing import (
+     TestCase, run_module_suite, assert_, assert_equal, assert_raises,
+diff --git a/numpy/core/tests/test_regression.py b/numpy/core/tests/test_regression.py
+index ace2c18..cd3c542 100644
+--- a/numpy/core/tests/test_regression.py
++++ b/numpy/core/tests/test_regression.py
+@@ -415,18 +415,18 @@ class TestRegression(TestCase):
+         test_data = [
+             # (original, py2_pickle)
+             (np.unicode_('\u6f2c'),
+-             asbytes("cnumpy.core.multiarray\nscalar\np0\n(cnumpy\ndtype\np1\n"
++             asbytes("cmultiarray\nscalar\np0\n(cnumpy\ndtype\np1\n"
+                      "(S'U1'\np2\nI0\nI1\ntp3\nRp4\n(I3\nS'<'\np5\nNNNI4\nI4\n"
+                      "I0\ntp6\nbS',o\\x00\\x00'\np7\ntp8\nRp9\n.")),
+ 
+             (np.array([9e123], dtype=np.float64),
+-             asbytes("cnumpy.core.multiarray\n_reconstruct\np0\n(cnumpy\nndarray\n"
++             asbytes("cmultiarray\n_reconstruct\np0\n(cnumpy\nndarray\n"
+                      "p1\n(I0\ntp2\nS'b'\np3\ntp4\nRp5\n(I1\n(I1\ntp6\ncnumpy\ndtype\n"
+                      "p7\n(S'f8'\np8\nI0\nI1\ntp9\nRp10\n(I3\nS'<'\np11\nNNNI-1\nI-1\n"
+                      "I0\ntp12\nbI00\nS'O\\x81\\xb7Z\\xaa:\\xabY'\np13\ntp14\nb.")),
+ 
+             (np.array([(9e123,)], dtype=[('name', float)]),
+-             asbytes("cnumpy.core.multiarray\n_reconstruct\np0\n(cnumpy\nndarray\np1\n"
++             asbytes("cmultiarray\n_reconstruct\np0\n(cnumpy\nndarray\np1\n"
+                      "(I0\ntp2\nS'b'\np3\ntp4\nRp5\n(I1\n(I1\ntp6\ncnumpy\ndtype\np7\n"
+                      "(S'V8'\np8\nI0\nI1\ntp9\nRp10\n(I3\nS'|'\np11\nN(S'name'\np12\ntp13\n"
+                      "(dp14\ng12\n(g7\n(S'f8'\np15\nI0\nI1\ntp16\nRp17\n(I3\nS'<'\np18\nNNNI-1\n"
+@@ -1853,7 +1853,7 @@ class TestRegression(TestCase):
+         # encoding='latin1' work correctly.
+ 
+         # Python2 output for pickle.dumps(numpy.array([129], dtype='b'))
+-        data = asbytes("cnumpy.core.multiarray\n_reconstruct\np0\n(cnumpy\nndarray\np1\n(I0\n"
++        data = asbytes("cmultiarray\n_reconstruct\np0\n(cnumpy\nndarray\np1\n(I0\n"
+                        "tp2\nS'b'\np3\ntp4\nRp5\n(I1\n(I1\ntp6\ncnumpy\ndtype\np7\n(S'i1'\np8\n"
+                        "I0\nI1\ntp9\nRp10\n(I3\nS'|'\np11\nNNNI-1\nI-1\nI0\ntp12\nbI00\nS'\\x81'\n"
+                        "p13\ntp14\nb.")
+@@ -1872,19 +1872,19 @@ class TestRegression(TestCase):
+         datas = [
+             # (original, python2_pickle, koi8r_validity)
+             (np.unicode_('\u6bd2'),
+-             asbytes("cnumpy.core.multiarray\nscalar\np0\n(cnumpy\ndtype\np1\n"
++             asbytes("cmultiarray\nscalar\np0\n(cnumpy\ndtype\np1\n"
+                      "(S'U1'\np2\nI0\nI1\ntp3\nRp4\n(I3\nS'<'\np5\nNNNI4\nI4\nI0\n"
+                      "tp6\nbS'\\xd2k\\x00\\x00'\np7\ntp8\nRp9\n."),
+              'invalid'),
+ 
+             (np.float64(9e123),
+-             asbytes("cnumpy.core.multiarray\nscalar\np0\n(cnumpy\ndtype\np1\n(S'f8'\n"
++             asbytes("cmultiarray\nscalar\np0\n(cnumpy\ndtype\np1\n(S'f8'\n"
+                      "p2\nI0\nI1\ntp3\nRp4\n(I3\nS'<'\np5\nNNNI-1\nI-1\nI0\ntp6\n"
+                      "bS'O\\x81\\xb7Z\\xaa:\\xabY'\np7\ntp8\nRp9\n."),
+              'invalid'),
+ 
+             (np.bytes_(asbytes('\x9c')),  # different 8-bit code point in KOI8-R vs latin1
+-             asbytes("cnumpy.core.multiarray\nscalar\np0\n(cnumpy\ndtype\np1\n(S'S1'\np2\n"
++             asbytes("cmultiarray\nscalar\np0\n(cnumpy\ndtype\np1\n(S'S1'\np2\n"
+                      "I0\nI1\ntp3\nRp4\n(I3\nS'|'\np5\nNNNI1\nI1\nI0\ntp6\nbS'\\x9c'\np7\n"
+                      "tp8\nRp9\n."),
+              'different'),
+diff --git a/numpy/core/tests/test_ufunc.py b/numpy/core/tests/test_ufunc.py
+index 62fe3c0..3c72761 100644
+--- a/numpy/core/tests/test_ufunc.py
++++ b/numpy/core/tests/test_ufunc.py
+@@ -46,7 +46,7 @@ class TestUfunc(TestCase):
+     def test_pickle_withstring(self):
+         import pickle
+         astring = asbytes("cnumpy.core\n_ufunc_reconstruct\np0\n"
+-                "(S'numpy.core.umath'\np1\nS'cos'\np2\ntp3\nRp4\n.")
++                "(S'umath'\np1\nS'cos'\np2\ntp3\nRp4\n.")
+         assert_(pickle.loads(astring) is np.cos)
+ 
+     def test_reduceat_shifting_sum(self):
+diff --git a/numpy/core/tests/test_umath.py b/numpy/core/tests/test_umath.py
+index 759e996..bca4c61 100644
+--- a/numpy/core/tests/test_umath.py
++++ b/numpy/core/tests/test_umath.py
+@@ -6,7 +6,7 @@ import warnings
+ import itertools
+ 
+ from numpy.testing.utils import _gen_alignment_data
+-import numpy.core.umath as ncu
++import umath as ncu
+ import numpy as np
+ from numpy.testing import (
+     TestCase, run_module_suite, assert_, assert_equal, assert_raises,
+diff --git a/numpy/core/tests/test_umath_complex.py b/numpy/core/tests/test_umath_complex.py
+index 536ad39..aeb0a41 100644
+--- a/numpy/core/tests/test_umath_complex.py
++++ b/numpy/core/tests/test_umath_complex.py
+@@ -4,7 +4,7 @@ import sys
+ import platform
+ 
+ import numpy as np
+-import numpy.core.umath as ncu
++import umath as ncu
+ from numpy.testing import (
+     TestCase, run_module_suite, assert_equal, assert_array_equal,
+     assert_almost_equal, dec
+diff --git a/numpy/ctypeslib.py b/numpy/ctypeslib.py
+index 36bcf27..1323889 100644
+--- a/numpy/ctypeslib.py
++++ b/numpy/ctypeslib.py
+@@ -56,7 +56,7 @@ __all__ = ['load_library', 'ndpointer', 'test', 'ctypes_load_library',
+ 
+ import sys, os
+ from numpy import integer, ndarray, dtype as _dtype, deprecate, array
+-from numpy.core.multiarray import _flagdict, flagsobj
++from multiarray import _flagdict, flagsobj
+ 
+ try:
+     import ctypes
+diff --git a/numpy/f2py/tests/test_array_from_pyobj.py b/numpy/f2py/tests/test_array_from_pyobj.py
+index 48bb7c0..2791d50 100644
+--- a/numpy/f2py/tests/test_array_from_pyobj.py
++++ b/numpy/f2py/tests/test_array_from_pyobj.py
+@@ -11,7 +11,7 @@ from numpy import (
+ from numpy.testing import (
+     run_module_suite, assert_, assert_equal, SkipTest
+ )
+-from numpy.core.multiarray import typeinfo
++from multiarray import typeinfo
+ import util
+ 
+ wrap = None
+diff --git a/numpy/fft/fftpack.py b/numpy/fft/fftpack.py
+index 8dc3ecc..f11f18c 100644
+--- a/numpy/fft/fftpack.py
++++ b/numpy/fft/fftpack.py
+@@ -37,7 +37,7 @@ __all__ = ['fft', 'ifft', 'rfft', 'irfft', 'hfft', 'ihfft', 'rfftn',
+ 
+ from numpy.core import (array, asarray, zeros, swapaxes, shape, conjugate,
+                         take, sqrt)
+-from . import fftpack_lite as fftpack
++import fftpack_lite as fftpack
+ from .helper import _FFTCache
+ 
+ _fft_cache = _FFTCache(max_size_in_mb=100, max_item_count=32)
+diff --git a/numpy/lib/function_base.py b/numpy/lib/function_base.py
+index a866ed7..f578bc5 100644
+--- a/numpy/lib/function_base.py
++++ b/numpy/lib/function_base.py
+@@ -13,7 +13,7 @@ from numpy.core.numeric import (
+     empty_like, ndarray, around, floor, ceil, take, dot, where, intp,
+     integer, isscalar, absolute
+     )
+-from numpy.core.umath import (
++from umath import (
+     pi, multiply, add, arctan2, frompyfunc, cos, less_equal, sqrt, sin,
+     mod, exp, log10
+     )
+@@ -23,11 +23,11 @@ from numpy.core.fromnumeric import (
+ from numpy.core.numerictypes import typecodes, number
+ from numpy.lib.twodim_base import diag
+ from .utils import deprecate
+-from numpy.core.multiarray import (
++from multiarray import (
+     _insert, add_docstring, digitize, bincount, 
+     interp as compiled_interp, interp_complex as compiled_interp_complex
+     )
+-from numpy.core.umath import _add_newdoc_ufunc as add_newdoc_ufunc
++from umath import _add_newdoc_ufunc as add_newdoc_ufunc
+ from numpy.compat import long
+ from numpy.compat.py3k import basestring
+ 
+diff --git a/numpy/lib/index_tricks.py b/numpy/lib/index_tricks.py
+index a0875a2..0a5ca46 100644
+--- a/numpy/lib/index_tricks.py
++++ b/numpy/lib/index_tricks.py
+@@ -12,7 +12,7 @@ from numpy.core.numerictypes import find_common_type, issubdtype
+ from . import function_base
+ import numpy.matrixlib as matrix
+ from .function_base import diff
+-from numpy.core.multiarray import ravel_multi_index, unravel_index
++from multiarray import ravel_multi_index, unravel_index
+ from numpy.lib.stride_tricks import as_strided
+ 
+ makemat = matrix.matrix
+diff --git a/numpy/lib/npyio.py b/numpy/lib/npyio.py
+index 534aa69..2bdb7a6 100644
+--- a/numpy/lib/npyio.py
++++ b/numpy/lib/npyio.py
+@@ -11,7 +11,7 @@ from operator import itemgetter, index as opindex
+ import numpy as np
+ from . import format
+ from ._datasource import DataSource
+-from numpy.core.multiarray import packbits, unpackbits
++from multiarray import packbits, unpackbits
+ from ._iotools import (
+     LineSplitter, NameValidator, StringConverter, ConverterError,
+     ConverterLockError, ConversionWarning, _is_string_like,
+@@ -378,7 +378,7 @@ def load(file, mmap_mode=None, allow_pickle=True, fix_imports=True,
+         # The 'encoding' value for pickle also affects what encoding
+         # the serialized binary data of Numpy arrays is loaded
+         # in. Pickle does not pass on the encoding information to
+-        # Numpy. The unpickling code in numpy.core.multiarray is
++        # Numpy. The unpickling code in multiarray is
+         # written to assume that unicode data appearing where binary
+         # should be is in 'latin1'. 'bytes' is also safe, as is 'ASCII'.
+         #
+diff --git a/numpy/linalg/linalg.py b/numpy/linalg/linalg.py
+index db50a5e..ad0d0a8 100644
+--- a/numpy/linalg/linalg.py
++++ b/numpy/linalg/linalg.py
+@@ -26,7 +26,7 @@ from numpy.core import (
+     broadcast, atleast_2d, intp, asanyarray, isscalar, object_
+     )
+ from numpy.lib import triu, asfarray
+-from numpy.linalg import lapack_lite, _umath_linalg
++import lapack_lite, _umath_linalg
+ from numpy.matrixlib.defmatrix import matrix_power
+ from numpy.compat import asbytes
+ 
+diff --git a/numpy/ma/core.py b/numpy/ma/core.py
+index 37836a0..e464fb1 100644
+--- a/numpy/ma/core.py
++++ b/numpy/ma/core.py
+@@ -27,7 +27,7 @@ import warnings
+ from functools import reduce
+ 
+ import numpy as np
+-import numpy.core.umath as umath
++import umath as umath
+ import numpy.core.numerictypes as ntypes
+ from numpy import ndarray, amax, amin, iscomplexobj, bool_, _NoValue
+ from numpy import array as narray
+diff --git a/numpy/ma/extras.py b/numpy/ma/extras.py
+index 781b254..5c89c57 100644
+--- a/numpy/ma/extras.py
++++ b/numpy/ma/extras.py
+@@ -35,7 +35,7 @@ from .core import (
+ 
+ import numpy as np
+ from numpy import ndarray, array as nxarray
+-import numpy.core.umath as umath
++import umath as umath
+ from numpy.lib.function_base import _ureduce
+ from numpy.lib.index_tricks import AxisConcatenator
+ 
+diff --git a/numpy/ma/tests/test_core.py b/numpy/ma/tests/test_core.py
+index b396500..03d1584 100644
+--- a/numpy/ma/tests/test_core.py
++++ b/numpy/ma/tests/test_core.py
+@@ -18,7 +18,7 @@ from functools import reduce
+ import numpy as np
+ import numpy.ma.core
+ import numpy.core.fromnumeric as fromnumeric
+-import numpy.core.umath as umath
++import umath as umath
+ from numpy.testing import TestCase, run_module_suite, assert_raises
+ from numpy import ndarray
+ from numpy.compat import asbytes, asbytes_nested
+diff --git a/numpy/ma/tests/test_old_ma.py b/numpy/ma/tests/test_old_ma.py
+index ed8304d..f35b1a2 100644
+--- a/numpy/ma/tests/test_old_ma.py
++++ b/numpy/ma/tests/test_old_ma.py
+@@ -3,7 +3,7 @@ from __future__ import division, absolute_import, print_function
+ from functools import reduce
+ 
+ import numpy as np
+-import numpy.core.umath as umath
++import umath as umath
+ import numpy.core.fromnumeric as fromnumeric
+ from numpy.testing import TestCase, run_module_suite, assert_
+ from numpy.ma.testutils import assert_array_equal
+diff --git a/numpy/ma/testutils.py b/numpy/ma/testutils.py
+index 8dc8218..19d8992 100644
+--- a/numpy/ma/testutils.py
++++ b/numpy/ma/testutils.py
+@@ -11,7 +11,7 @@ import operator
+ 
+ import numpy as np
+ from numpy import ndarray, float_
+-import numpy.core.umath as umath
++import umath as umath
+ from numpy.testing import (
+     TestCase, assert_, assert_allclose, assert_array_almost_equal_nulp,
+     assert_raises, build_err_msg, run_module_suite,
+diff --git a/numpy/random/__init__.py b/numpy/random/__init__.py
+index 6c7d314..3716854 100644
+--- a/numpy/random/__init__.py
++++ b/numpy/random/__init__.py
+@@ -96,10 +96,10 @@ from .info import __doc__, __all__
+ 
+ with warnings.catch_warnings():
+     warnings.filterwarnings("ignore", message="numpy.ndarray size changed")
+-    from .mtrand import *
++    import mtrand
+ 
+ # Some aliases:
+-ranf = random = sample = random_sample
++ranf = random = sample = random_sample = mtrand.random_sample
+ __all__.extend(['ranf', 'random', 'sample'])
+ 
+ def __RandomState_ctor():

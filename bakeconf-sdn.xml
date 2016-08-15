@@ -1708,6 +1708,7 @@
       </source>
       <depends_on name="setuptools-local" optional="False"/>
       <depends_on name="greenlet" optional="False"/>
+      <depends_on name="numpy" optional="False"/>
       <depends_on name="oslo_config" optional="False"/>
       <depends_on name="netaddr" optional="False"/>
       <depends_on name="routes" optional="False"/>
@@ -1717,7 +1718,20 @@
       <build type="autotools" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
         <attribute name="configure_arguments" value="./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+        <attribute name="pre_installation" value="cd $SRCDIR/Modules/_ctypes/libffi ; ./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CPPFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --prefix=$SRCDIR/Modules/_ctypes/libffi"/>
         <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="numpy">
+      <source type="git">
+        <attribute name="url" value="https://github.com/numpy/numpy"/>
+        <attribute name="revision" value="4c415d2dbacb9117e295ad634bbe1d88de5b3ed6"/>
+        <attribute name="patch" value="$SRCDIR/../../numpy.patch" />
+        <attribute name="module_directory" value="numpy"/>
+      </source>
+      <build type="none" objdir="no">
+        <attribute name="pre_installation" value="cd $SRCDIR ; python setup.py build_ext --inplace ; ln -s $SRCDIR/build/temp.linux-x86_64-2.7 $SRCDIR/numpy/core/src/npylibs ; ln -s $SRCDIR/numpy $SRCDIR/../Python-2.7.10/Modules/numpy"/>
       </build>
     </module>
 

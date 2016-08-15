@@ -1,6 +1,6 @@
 diff -r 15c95b7d81dc Lib/posixpath.py
 --- a/Lib/posixpath.py	Sat May 23 11:02:14 2015 -0500
-+++ b/Lib/posixpath.py	Wed Jul 27 17:49:27 2016 -0400
++++ b/Lib/posixpath.py	Mon Aug 15 15:03:36 2016 -0400
 @@ -259,7 +259,7 @@
      if i == 1:
          if 'HOME' not in os.environ:
@@ -12,7 +12,7 @@ diff -r 15c95b7d81dc Lib/posixpath.py
      else:
 diff -r 15c95b7d81dc Makefile.pre.in
 --- a/Makefile.pre.in	Sat May 23 11:02:14 2015 -0500
-+++ b/Makefile.pre.in	Wed Jul 27 17:49:27 2016 -0400
++++ b/Makefile.pre.in	Mon Aug 15 15:03:36 2016 -0400
 @@ -970,6 +970,12 @@
  		encodings compiler hotshot \
  		email email/mime email/test email/test/data \
@@ -38,7 +38,7 @@ diff -r 15c95b7d81dc Makefile.pre.in
  		curses pydoc_data $(MACHDEPS)
 diff -r 15c95b7d81dc Modules/Setup.dist
 --- a/Modules/Setup.dist	Sat May 23 11:02:14 2015 -0500
-+++ b/Modules/Setup.dist	Wed Jul 27 17:49:27 2016 -0400
++++ b/Modules/Setup.dist	Mon Aug 15 15:03:36 2016 -0400
 @@ -163,77 +163,77 @@
  # it, depending on your system -- see the GNU readline instructions.
  # It's okay for this to be a shared library, too.
@@ -196,16 +196,69 @@ diff -r 15c95b7d81dc Modules/Setup.dist
  
  # Interface to the Expat XML parser
  #
-@@ -497,3 +497,6 @@
+@@ -497,3 +497,28 @@
  
  # Another example -- the 'xxsubtype' module shows C-level subtyping in action
  xxsubtype xxsubtype.c
 +
 +# Greenlet module
 +greenlet greenlet/greenlet.c
++
++# _ctypes builtin
++_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/stgdict.c _ctypes/cfield.c -I$(srcdir)/Include -I$(srcdir)/Modules/_ctypes -L$(srcdir)/Modules/_ctypes/libffi/lib -lffi
++
++# _hashlib builtin
++_hashlib _hashopenssl.c -L/usr/lib/x86_64-linux-gnu -lssl -lcrypto
++
++# future_builtins builtin
++future_builtins future_builtins.c
++
++# Numpy modules
++multiarray numpy/core/src/multiarray/alloc.c numpy/core/src/multiarray/array_assign.c numpy/core/src/multiarray/array_assign_array.c numpy/core/src/multiarray/array_assign_scalar.c numpy/core/src/multiarray/arrayobject.c numpy/core/src/multiarray/arraytypes.c numpy/core/src/multiarray/buffer.c numpy/core/src/multiarray/calculation.c numpy/core/src/multiarray/common.c numpy/core/src/multiarray/compiled_base.c numpy/core/src/multiarray/conversion_utils.c numpy/core/src/multiarray/convert.c numpy/core/src/multiarray/convert_datatype.c numpy/core/src/multiarray/ctors.c numpy/core/src/multiarray/datetime.c numpy/core/src/multiarray/datetime_busday.c numpy/core/src/multiarray/datetime_busdaycal.c numpy/core/src/multiarray/datetime_strings.c numpy/core/src/multiarray/descriptor.c numpy/core/src/multiarray/dtype_transfer.c numpy/core/src/multiarray/einsum.c numpy/core/src/multiarray/flagsobject.c numpy/core/src/multiarray/getset.c numpy/core/src/multiarray/hashdescr.c numpy/core/src/multiarray/item_selection.c numpy/core/src/multiarray/iterators.c numpy/core/src/multiarray/lowlevel_strided_loops.c numpy/core/src/multiarray/mapping.c numpy/core/src/multiarray/methods.c numpy/core/src/multiarray/multiarraymodule.c numpy/core/src/multiarray/nditer_api.c numpy/core/src/multiarray/nditer_constr.c numpy/core/src/multiarray/nditer_pywrap.c numpy/core/src/multiarray/nditer_templ.c numpy/core/src/multiarray/number.c numpy/core/src/multiarray/numpymemoryview.c numpy/core/src/multiarray/numpyos.c numpy/core/src/multiarray/refcount.c numpy/core/src/multiarray/scalarapi.c numpy/core/src/multiarray/scalartypes.c numpy/core/src/multiarray/sequence.c numpy/core/src/multiarray/shape.c numpy/core/src/multiarray/ucsnarrow.c numpy/core/src/multiarray/usertypes.c numpy/core/src/multiarray/vdot.c numpy/core/src/private/mem_overlap.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/multiarray -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath -lnpysort
++
++umath numpy/core/src/umath/loops.c numpy/core/src/umath/reduction.c numpy/core/src/umath/scalarmath.c numpy/core/src/umath/ufunc_object.c numpy/core/src/umath/ufunc_type_resolution.c numpy/core/src/umath/umathmodule.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/umath -I$(srcdir)/Modules/numpy/core/src/multiarray -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath -lnpysort
++
++fftpack_lite numpy/fft/fftpack_litemodule.c numpy/fft/fftpack.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/fft -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
++
++lapack_lite numpy/linalg/lapack_lite/python_xerbla.c numpy/linalg/lapack_lite/blas_lite.c numpy/linalg/lapack_lite/dlamch.c numpy/linalg/lapack_lite/dlapack_lite.c numpy/linalg/lapack_lite/f2c_lite.c numpy/linalg/lapack_lite/zlapack_lite.c numpy/linalg/lapack_litemodule.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite/linalg -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
++
++_umath_linalg numpy/linalg/lapack_lite/python_xerbla.c numpy/linalg/lapack_lite/blas_lite.c numpy/linalg/lapack_lite/dlamch.c numpy/linalg/lapack_lite/dlapack_lite.c numpy/linalg/lapack_lite/f2c_lite.c numpy/linalg/lapack_lite/zlapack_lite.c numpy/linalg/umath_linalg.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite/linalg -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath
++
++mtrand numpy/random/mtrand/distributions.c numpy/random/mtrand/initarray.c numpy/random/mtrand/randomkit.c numpy/random/mtrand/mtrand.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/ -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
 diff -r 15c95b7d81dc setup.py
 --- a/setup.py	Sat May 23 11:02:14 2015 -0500
-+++ b/setup.py	Wed Jul 27 17:49:27 2016 -0400
++++ b/setup.py	Mon Aug 15 15:03:36 2016 -0400
+@@ -283,9 +283,9 @@
+ 
+     def build_extension(self, ext):
+ 
+-        if ext.name == '_ctypes':
+-            if not self.configure_ctypes(ext):
+-                return
++        #if ext.name == '_ctypes':
++        #    if not self.configure_ctypes(ext):
++        #        return
+ 
+         try:
+             build_ext.build_extension(self, ext)
+@@ -587,7 +587,7 @@
+         exts.append( Extension("itertools", ["itertoolsmodule.c"]) )
+         # code that will be builtins in the future, but conflict with the
+         #  current builtins
+-        exts.append( Extension('future_builtins', ['future_builtins.c']) )
++        #exts.append( Extension('future_builtins', ['future_builtins.c']) )
+         # random number generator implemented in C
+         exts.append( Extension("_random", ["_randommodule.c"]) )
+         # high-performance collections
+@@ -1538,7 +1538,7 @@
+             missing.append('dl')
+ 
+         # Thomas Heller's _ctypes module
+-        self.detect_ctypes(inc_dirs, lib_dirs)
++        #self.detect_ctypes(inc_dirs, lib_dirs)
+ 
+         # Richard Oudkerk's multiprocessing module
+         if host_platform == 'win32':             # Windows
 @@ -2105,7 +2105,7 @@
          if host_platform == 'darwin':
              # OS X 10.5 comes with libffi.dylib; the include files are
