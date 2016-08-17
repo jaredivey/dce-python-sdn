@@ -27,6 +27,8 @@ It is recommended that a VM be used for testing and experimenting, particularly 
   sudo apt-get install libreadline-dev
   ```
 
+1. Install Cython (for numpy installation with Python): http://docs.cython.org/en/latest/src/quickstart/install.html
+
 1. Install OpenJDK dependencies:
   ```
   sudo apt-get install openjdk-7-jdk libX11-dev libxext-dev libxtst-dev libxt-dev libcups2-dev libasound2-dev ccache
