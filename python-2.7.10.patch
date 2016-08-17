@@ -205,7 +205,7 @@ diff -r 15c95b7d81dc Modules/Setup.dist
 +greenlet greenlet/greenlet.c
 +
 +# _ctypes builtin
-+_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/stgdict.c _ctypes/cfield.c -I$(srcdir)/Include -I$(srcdir)/Modules/_ctypes -L$(srcdir)/Modules/_ctypes/libffi/lib -lffi
++_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/stgdict.c _ctypes/cfield.c -I$(srcdir)/Include -I$(srcdir)/Modules/_ctypes -I$(srcdir)/Modules/_ctypes/libffi/x86_64-unknown-linux-gnu/include -L$(srcdir)/Modules/_ctypes/libffi/lib -lffi
 +
 +# _hashlib builtin
 +_hashlib _hashopenssl.c -L/usr/lib/x86_64-linux-gnu -lssl -lcrypto
