@@ -1742,7 +1742,7 @@
       <depends_on name="pycuda" optional="False"/>
       <build type="autotools" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
-        <attribute name="configure_arguments" value="./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --without-gcc --with-cxx-main='g++ -std=gnu++11' --enable-unicode=ucs4 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+        <attribute name="configure_arguments" value="./configure 'CXX=g++ -std=gnu++11' 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --without-gcc --with-cxx-main='g++ -std=gnu++11' --enable-unicode=ucs4 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
         <attribute name="pre_installation" value="cd $SRCDIR/Modules/_ctypes/libffi ; ./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CPPFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --prefix=$SRCDIR/Modules/_ctypes/libffi ; make install"/>
         <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10"/>
       </build>
