@@ -1,0 +1,87 @@
+diff --git a/pycuda/curandom.py b/pycuda/curandom.py
+index e1c6842..7e449fd 100644
+--- a/pycuda/curandom.py
++++ b/pycuda/curandom.py
+@@ -249,7 +249,7 @@ def rand(shape, dtype=np.float32, stream=None):
+ # {{{ CURAND wrapper
+ 
+ try:
+-    import pycuda._driver as _curand # used to be separate module
++    import _cudadriver as _curand # used to be separate module
+ except ImportError:
+     def get_curand_version():
+         return None
+diff --git a/pycuda/driver.py b/pycuda/driver.py
+index 3fa4c5b..d8dac25 100644
+--- a/pycuda/driver.py
++++ b/pycuda/driver.py
+@@ -2,7 +2,7 @@ from __future__ import absolute_import
+ from __future__ import print_function
+ import six
+ try:
+-    from pycuda._driver import *  # noqa
++    from _cudadriver import *  # noqa
+ except ImportError as e:
+     if "_v2" in str(e):
+         from warnings import warn
+diff --git a/pycuda/gl/__init__.py b/pycuda/gl/__init__.py
+index 56c0e64..66d9c89 100644
+--- a/pycuda/gl/__init__.py
++++ b/pycuda/gl/__init__.py
+@@ -1,5 +1,5 @@
+ from __future__ import absolute_import
+-import pycuda._driver as _drv
++import _cudadriver as _drv
+ 
+ if not _drv.have_gl_ext(): 
+     raise ImportError("PyCUDA was compiled without GL extension support")
+diff --git a/setup.py b/setup.py
+index 001ed43..7e72206 100644
+--- a/setup.py
++++ b/setup.py
+@@ -205,7 +205,7 @@ def main():
+ 
+             ext_package="pycuda",
+             ext_modules=[
+-                NumpyExtension("_driver",
++                NumpyExtension("_cudadriver",
+                     [
+                         "src/cpp/cuda.cpp",
+                         "src/cpp/bitlog.cpp",
+diff --git a/src/cpp/mempool.hpp b/src/cpp/mempool.hpp
+index be88f13..1c7b79b 100644
+--- a/src/cpp/mempool.hpp
++++ b/src/cpp/mempool.hpp
+@@ -14,8 +14,8 @@
+ #include <boost/format.hpp>
+ #include "bitlog.hpp"
+ 
+-
+-
++#define PYGPU_PACKAGE pycuda
++#define PYGPU_PYCUDA 1
+ 
+ namespace PYGPU_PACKAGE
+ {
+diff --git a/src/wrapper/wrap_cudadrv.cpp b/src/wrapper/wrap_cudadrv.cpp
+index 7217597..24c822b 100644
+--- a/src/wrapper/wrap_cudadrv.cpp
++++ b/src/wrapper/wrap_cudadrv.cpp
+@@ -528,7 +528,7 @@ void pycuda_expose_curand();
+ 
+ 
+ 
+-BOOST_PYTHON_MODULE(_driver)
++BOOST_PYTHON_MODULE(_cudadriver)
+ {
+   py::def("get_version", cuda_version);
+ #if CUDAPP_CUDA_VERSION >= 2020
+@@ -538,7 +538,7 @@ BOOST_PYTHON_MODULE(_driver)
+   // {{{ exceptions
+ 
+ #define DECLARE_EXC(NAME, BASE) \
+-  Cuda##NAME = py::handle<>(PyErr_NewException("pycuda._driver." #NAME, BASE, NULL)); \
++  Cuda##NAME = py::handle<>(PyErr_NewException("_cudadriver." #NAME, BASE, NULL)); \
+   py::scope().attr(#NAME) = Cuda##NAME;
+ 
+   {
