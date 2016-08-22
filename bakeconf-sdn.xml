@@ -2187,7 +2187,7 @@
       <depends_on name="bash" optional="True"/>
       <build type="waf" objdir="build">
         <attribute name="supported_os" value="linux;linux2"/>
-        <attribute name="pre_installation" value="rm $INSTALLDIR/lib/libpython2.7.a"/>
+        <attribute name="pre_installation" value="mv $INSTALLDIR/lib/libpython2.7.a $INSTALLDIR/lib/mvpython2.7"/>
         <attribute name="configure_arguments" value="configure --enable-mpi --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR --enable-kernel-stack=$SRCDIR/../net-next-sim-2.6.36/arch --prefix=$INSTALLDIR"/>
         <attribute name="post_installation" value="mkdir $SRCDIR/files-0 ; ln -s $INSTALLDIR/lib/python2.7 $SRCDIR/files-0/ ; cp -r $SRCDIR/../pox $SRCDIR/files-0/ ; cp $SRCDIR/../ryu/bin/ryu-manager $SRCDIR/files-0/ ; cp -r $SRCDIR/../ryu/ryu $SRCDIR/files-0/; cp -r $SRCDIR/../ryu/etc $SRCDIR/files-0/ ; ln -s $SRCDIR/../numpy/numpy $SRCDIR/files-0/ ; ln -s $INSTALLDIR/jvm/openjdk-1.8.0-internal $SRCDIR/files-0/ ; mkdir $SRCDIR/files-0/dummies ; cp -r $SRCDIR/myscripts/python/proc $SRCDIR/files-0/ ; cd $SRCDIR/myscripts/python/testscripts ; javac PiDigits.java ; cp PiDigits.class $SRCDIR/files-0/ "/>
       </build>
