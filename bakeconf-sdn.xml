@@ -155,6 +155,18 @@
       </build>
     </module>
 
+    <module name="libpcre3-dev">
+      <source type="system_dependency">
+        <attribute name="dependency_test" value="pcre.h"/>
+        <attribute name="try_to_install" value="True"/>
+        <attribute name="name_apt-get" value="libpcre3-dev"/>
+        <attribute name="name_yum" value="pcre-devel"/>
+        <attribute name="more_information" value="Didn't find:   libpcre3-dev package; please install it."/>
+      </source>
+      <build type="none" objdir="no">
+      </build>
+    </module>
+
     <module name="libexpat-dev">
       <source type="system_dependency">
         <attribute name="dependency_test" value="expat.h"/>
@@ -2074,7 +2086,7 @@
 </source>
 <build type="waf">
 <attribute name="CXXFLAGS" value="" />
-<attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --enable-examples --enable-tests --enable-mpi --enable-sdn" />
+<attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --enable-examples --enable-tests --enable-mpi --enable-sdn --with-ofswitch13='$SRCDIR/../ofsoftswitch13'"/>
 <attribute name="v_LD_LIBRARY" value="" />
 <attribute name="LDFLAGS" value="" />
 <attribute name="CC" value="" />
@@ -2094,6 +2106,8 @@
 <attribute name="v_PKG_CONFIG" value="" />
 </build>
 <depends_on name="netanim-3.106" optional="True" />
+<depends_on name="ofsoftswitch13" optional="False" />
+<depends_on name="ofswitch13-module" optional="False" />
 <depends_on name="pybindgen-0.17.0.post41+ngd10fa60" optional="True" />
 <depends_on name="pyviz-prerequisites" optional="True" />
 </module>
@@ -2300,6 +2314,58 @@
         <attribute name="post_installation" value="mkdir -p $INSTALLDIR/bin_dce; cd $INSTALLDIR/bin_dce; cp $SRCDIR/liblinux.so ./"/>
       </build>
     </module>
+
+
+    <module name="netbee">
+      <source type="git">
+        <attribute name="url" value="https://github.com/jaredivey/netbee.git"/>
+        <attribute name="revision" value="master"/>
+        <attribute name="module_directory" value="netbee"/>
+      </source>
+      <build type="make">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="pre_installation" value="cd $SRCDIR/src; cmake ."/>
+        <attribute name="build_arguments" value="-C src -j"/>
+        <!-- <attribute name="post_installation" value="cp -r $SRCDIR/include/*.h $INSTALLDIR/include; cp $SRCDIR/bin/*.so $INSTALLDIR/lib"/> -->
+        <attribute name="post_installation" value="sudo cp -r $SRCDIR/include/*.h /usr/include; sudo cp $SRCDIR/bin/*.so /usr/local/lib ; sudo ldconfig"/>
+      </build>
+      <depends_on name="g++" optional="False"/>
+      <depends_on name="flex" optional="False"/>
+      <depends_on name="bison" optional="False"/>
+      <depends_on name="cmake" optional="False"/>
+      <depends_on name="libpcre3-dev" optional="False"/>
+      <depends_on name="libpcap-dev" optional="False"/>
+    </module>
+
+    <module name="ofsoftswitch13">
+      <source type="git">
+        <attribute name="url" value="https://github.com/ljerezchaves/ofsoftswitch13.git"/>
+        <attribute name="revision" value="ns3lib"/>
+        <attribute name="module_directory" value="ofsoftswitch13"/>
+      </source>
+      <build type="autotools">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="pre_installation" value="cd $SRCDIR ; ./boot.sh"/>
+        <attribute name="configure_arguments" value="./configure 'CFLAGS=-w -I$INSTALLDIR/include -I/usr/local/include -L$INSTALLDIR/lib -L/usr/local/lib' 'CPPFLAGS=-I$INSTALLDIR/include -I/usr/local/include -L$INSTALLDIR/lib -L/usr/local/lib' --exec-prefix=$INSTALLDIR --prefix=$INSTALLDIR --enable-ns3-lib"/>
+        <!-- TODO (Jon): move the compiled library file somewhere? -->
+        <!-- <attribute name="post_installation" value="cp udatapath/*.a somewhere/"/> -->
+      </build>
+      <depends_on name="netbee" optional="False"/>
+    </module>
+
+    <module name="ofswitch13-module">
+      <source type="mercurial">
+        <attribute name="url" value="https://bitbucket.org/ljerezchaves/ofswitch13-module"/>
+        <attribute name="module_directory" value="ofswitch13"/>
+        <attribute name="revision" value="2.0.2"/>
+      </source>
+      <build type="none">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR $SRCDIR/../ns-3-sdn/src/ofswitch13"/>
+      </build>
+      <depends_on name="ofsoftswitch13" optional="False"/>
+    </module>
+
 
 <!--  Bake specific dependencies -->
     <module name="mercurial">
