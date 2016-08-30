@@ -1731,7 +1731,7 @@
         <attribute name="supported_os" value="linux;linux2"/>
         <attribute name="configure_arguments" value="./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --enable-unicode=ucs4 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
         <attribute name="pre_installation" value="cd $SRCDIR/Modules/_ctypes/libffi ; ./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CPPFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --prefix=$SRCDIR/Modules/_ctypes/libffi ; make install"/>
-        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10"/>
+        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10 ; mv $INSTALLDIR/lib/libpython2.7.a $INSTALLDIR/lib/libpython2.7.x"/>
       </build>
     </module>
 
@@ -2086,13 +2086,13 @@
 </source>
 <build type="waf">
 <attribute name="CXXFLAGS" value="" />
-<attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --enable-examples --enable-tests --enable-mpi --enable-sdn --with-ofswitch13='$SRCDIR/../ofsoftswitch13'"/>
+<attribute name="pre_installation" value="cd $SRCDIR ; patch -p1 -i $SRCDIR/src/ofswitch13/utils/ofswitch13-csma-3_24_1.patch ; patch -p1 -i $SRCDIR/src/ofswitch13/utils/ofswitch13-doc-3_24_1.patch" />
+<attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --enable-examples --enable-tests --enable-mpi --enable-sdn --with-ofswitch13=$SRCDIR/../ofsoftswitch13"/>
 <attribute name="v_LD_LIBRARY" value="" />
 <attribute name="LDFLAGS" value="" />
 <attribute name="CC" value="" />
 <attribute name="ignore_predefined_flags" value="False" />
 <attribute name="build_arguments" value="" />
-<attribute name="pre_installation" value="" />
 <attribute name="patch" value="" />
 <attribute name="CFLAGS" value="" />
 <attribute name="CXX" value="" />
@@ -2201,7 +2201,6 @@
       <depends_on name="bash" optional="True"/>
       <build type="waf" objdir="build">
         <attribute name="supported_os" value="linux;linux2"/>
-        <attribute name="pre_installation" value="mv $INSTALLDIR/lib/libpython2.7.a $INSTALLDIR/lib/mvpython2.7"/>
         <attribute name="configure_arguments" value="configure --enable-mpi --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR --enable-kernel-stack=$SRCDIR/../net-next-sim-2.6.36/arch --prefix=$INSTALLDIR"/>
         <attribute name="post_installation" value="mkdir $SRCDIR/files-0 ; ln -s $INSTALLDIR/lib/python2.7 $SRCDIR/files-0/ ; cp -r $SRCDIR/../pox $SRCDIR/files-0/ ; cp $SRCDIR/../ryu/bin/ryu-manager $SRCDIR/files-0/ ; cp -r $SRCDIR/../ryu/ryu $SRCDIR/files-0/; cp -r $SRCDIR/../ryu/etc $SRCDIR/files-0/ ; ln -s $SRCDIR/../numpy/numpy $SRCDIR/files-0/ ; ln -s $INSTALLDIR/jvm/openjdk-1.8.0-internal $SRCDIR/files-0/ ; mkdir $SRCDIR/files-0/dummies ; cp -r $SRCDIR/myscripts/python/proc $SRCDIR/files-0/ ; cd $SRCDIR/myscripts/python/testscripts ; javac PiDigits.java ; cp PiDigits.class $SRCDIR/files-0/ "/>
       </build>
