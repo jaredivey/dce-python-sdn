@@ -27,9 +27,9 @@ It is recommended that a VM be used for testing and experimenting, particularly 
   sudo apt-get install libboost-dev libpcap-dev libxerces-c2-dev libpcre3-dev libdb-dev libexpat-dev flex bison cmake
   ```
   
-1. Install readline library (for Python):
+1. Install dependencies for building Python:
   ```
-  sudo apt-get install libreadline-dev
+  sudo apt-get install libreadline-dev texinfo
   ```
 
 1. Install Cython (for numpy installation with Python): http://docs.cython.org/en/latest/src/quickstart/install.html
