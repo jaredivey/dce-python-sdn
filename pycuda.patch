@@ -63,20 +63,60 @@ index be88f13..1c7b79b 100644
  
  namespace PYGPU_PACKAGE
  {
+diff --git a/src/wrapper/_pvt_struct_v2.cpp b/src/wrapper/_pvt_struct_v2.cpp
+index dac3484..2834d6a 100644
+--- a/src/wrapper/_pvt_struct_v2.cpp
++++ b/src/wrapper/_pvt_struct_v2.cpp
+@@ -13,7 +13,8 @@
+ #include "structseq.h"
+ #include "structmember.h"
+ #include <ctype.h>
+-#include "numpy_init.hpp"
++#include <numpy/arrayobject.h>
++//#include "numpy_init.hpp"
+ 
+ // static PyTypeObject PyStructType;
+ 
+@@ -1576,6 +1577,8 @@ init_pvt_struct(void)
+ 	if (ver == NULL)
+ 		return;
+ 
++	import_array1();
++
+ 	m = Py_InitModule3("_pvt_struct", module_functions, module_doc);
+ 	if (m == NULL)
+ 		return;
+diff --git a/src/wrapper/tools.hpp b/src/wrapper/tools.hpp
+index f0fd571..b126f08 100644
+--- a/src/wrapper/tools.hpp
++++ b/src/wrapper/tools.hpp
+@@ -7,7 +7,8 @@
+ #include <cuda.hpp>
+ #include <boost/python.hpp>
+ #include <numeric>
+-#include "numpy_init.hpp"
++#include <numpy/arrayobject.h>
++//#include "numpy_init.hpp"
+ 
+ 
+ 
 diff --git a/src/wrapper/wrap_cudadrv.cpp b/src/wrapper/wrap_cudadrv.cpp
-index 7217597..24c822b 100644
+index 7217597..95e39e2 100644
 --- a/src/wrapper/wrap_cudadrv.cpp
 +++ b/src/wrapper/wrap_cudadrv.cpp
-@@ -528,7 +528,7 @@ void pycuda_expose_curand();
+@@ -528,8 +528,10 @@ void pycuda_expose_curand();
  
  
  
 -BOOST_PYTHON_MODULE(_driver)
 +BOOST_PYTHON_MODULE(_cudadriver)
  {
++  import_array();
++
    py::def("get_version", cuda_version);
  #if CUDAPP_CUDA_VERSION >= 2020
-@@ -538,7 +538,7 @@ BOOST_PYTHON_MODULE(_driver)
+   py::def("get_driver_version", pycuda::get_driver_version);
+@@ -538,7 +540,7 @@ BOOST_PYTHON_MODULE(_driver)
    // {{{ exceptions
  
  #define DECLARE_EXC(NAME, BASE) \
