@@ -1,3 +1,17 @@
+diff --git a/pycuda/compiler.py b/pycuda/compiler.py
+index c0b5ba6..ac08c6d 100644
+--- a/pycuda/compiler.py
++++ b/pycuda/compiler.py
+@@ -177,7 +177,8 @@ def _get_per_user_string():
+ 
+ def _find_pycuda_include_path():
+     from pkg_resources import Requirement, resource_filename
+-    return resource_filename(Requirement.parse("pycuda"), "pycuda/cuda")
++    return "pycuda/cuda" #resource_filename(Requirement.parse("pycuda"), "pycuda/cuda")
++    #return "/home/ivey/dce-python-sdn/source/ns-3-dce/files-0/pycuda/cuda" #resource_filename(Requirement.parse("pycuda"), "pycuda/cuda")
+ 
+ 
+ import os
 diff --git a/pycuda/curandom.py b/pycuda/curandom.py
 index e1c6842..7e449fd 100644
 --- a/pycuda/curandom.py
@@ -12,7 +26,7 @@ index e1c6842..7e449fd 100644
      def get_curand_version():
          return None
 diff --git a/pycuda/driver.py b/pycuda/driver.py
-index 3fa4c5b..d8dac25 100644
+index 3fa4c5b..eef71da 100644
 --- a/pycuda/driver.py
 +++ b/pycuda/driver.py
 @@ -2,7 +2,7 @@ from __future__ import absolute_import
@@ -24,6 +38,78 @@ index 3fa4c5b..d8dac25 100644
  except ImportError as e:
      if "_v2" in str(e):
          from warnings import warn
+@@ -161,7 +161,7 @@ def _add_functionality():
+                     arg_data.append(int(gpudata))
+                     format += "P"
+ 
+-        from pycuda._pvt_struct import pack
++        from _pvt_struct import pack
+         return handlers, pack(format, *arg_data)
+ 
+     # {{{ pre-CUDA 4 call interface (stateful)
+@@ -260,7 +260,7 @@ def _add_functionality():
+             else:
+                 func.arg_format += np.dtype(np.uintp).char
+ 
+-        from pycuda._pvt_struct import calcsize
++        from _pvt_struct import calcsize
+         func._param_set_size(calcsize(func.arg_format))
+ 
+         return func
+@@ -282,7 +282,7 @@ def _add_functionality():
+             raise TypeError("unknown keyword arguments: "
+                     + ", ".join(six.iterkeys(kwargs)))
+ 
+-        from pycuda._pvt_struct import pack
++        from _pvt_struct import pack
+         func._param_setv(0, pack(func.arg_format, *args))
+ 
+         for texref in func.texrefs:
+@@ -308,7 +308,7 @@ def _add_functionality():
+             raise TypeError("unknown keyword arguments: "
+                     + ", ".join(six.iterkeys(kwargs)))
+ 
+-        from pycuda._pvt_struct import pack
++        from _pvt_struct import pack
+         func._param_setv(0, pack(func.arg_format, *args))
+ 
+         for texref in func.texrefs:
+@@ -347,7 +347,7 @@ def _add_functionality():
+             raise TypeError("unknown keyword arguments: "
+                     + ", ".join(six.iterkeys(kwargs)))
+ 
+-        from pycuda._pvt_struct import pack
++        from _pvt_struct import pack
+         func._param_setv(0, pack(func.arg_format, *args))
+ 
+         for texref in func.texrefs:
+@@ -457,7 +457,7 @@ def _add_functionality():
+             raise TypeError("unknown keyword arguments: "
+                     + ", ".join(six.iterkeys(kwargs)))
+ 
+-        from pycuda._pvt_struct import pack
++        from _pvt_struct import pack
+         arg_buf = pack(func.arg_format, *args)
+ 
+         for texref in func.texrefs:
+@@ -471,7 +471,7 @@ def _add_functionality():
+             raise TypeError("unknown keyword arguments: "
+                     + ", ".join(six.iterkeys(kwargs)))
+ 
+-        from pycuda._pvt_struct import pack
++        from _pvt_struct import pack
+         arg_buf = pack(func.arg_format, *args)
+ 
+         for texref in func.texrefs:
+@@ -507,7 +507,7 @@ def _add_functionality():
+             raise TypeError("unknown keyword arguments: "
+                     + ", ".join(six.iterkeys(kwargs)))
+ 
+-        from pycuda._pvt_struct import pack
++        from _pvt_struct import pack
+         arg_buf = pack(func.arg_format, *args)
+ 
+         for texref in func.texrefs:
 diff --git a/pycuda/gl/__init__.py b/pycuda/gl/__init__.py
 index 56c0e64..66d9c89 100644
 --- a/pycuda/gl/__init__.py
@@ -35,6 +121,19 @@ index 56c0e64..66d9c89 100644
  
  if not _drv.have_gl_ext(): 
      raise ImportError("PyCUDA was compiled without GL extension support")
+diff --git a/pycuda/tools.py b/pycuda/tools.py
+index 7a5fdce..2efdac0 100644
+--- a/pycuda/tools.py
++++ b/pycuda/tools.py
+@@ -33,7 +33,7 @@ OTHER DEALINGS IN THE SOFTWARE.
+ 
+ import pycuda.driver as cuda
+ from decorator import decorator
+-import pycuda._driver as _drv
++import _cudadriver as _drv
+ import numpy as np
+ 
+ 
 diff --git a/setup.py b/setup.py
 index 001ed43..7e72206 100644
 --- a/setup.py

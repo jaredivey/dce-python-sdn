@@ -1756,7 +1756,7 @@
         <attribute name="supported_os" value="linux;linux2"/>
         <attribute name="configure_arguments" value="./configure 'CXX=g++' 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --without-gcc --with-cxx-main='g++' --enable-unicode=ucs4 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
         <attribute name="pre_installation" value="cd $SRCDIR/Modules/_ctypes/libffi ; ./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CPPFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --prefix=$SRCDIR/Modules/_ctypes/libffi ; make install"/>
-        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10"/>
+        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10 ; mv $INSTALLDIR/lib/libpython2.7.a $INSTALLDIR/lib/libpython2.7.x"/>
       </build>
     </module>
 
@@ -1778,6 +1778,36 @@
       <depends_on name="markupsafe" optional="False"/>
       <build type="none" objdir="no">
         <attribute name="pre_installation" value="cp -r $SRCDIR/mako $SRCDIR/../Python-2.7.10/Lib/"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="decorator">
+      <source type="archive">
+        <attribute name="url" value="https://pypi.python.org/packages/13/8a/4eed41e338e8dcc13ca41c94b142d4d20c0de684ee5065523fee406ce76f/decorator-4.0.10.tar.gz#md5=434b57fdc3230c500716c5aff8896100"/>
+        <attribute name="module_directory" value="decorator"/>
+      </source>
+      <build type="none" objdir="no">
+        <attribute name="pre_installation" value="cp $SRCDIR/src/decorator.py $SRCDIR/../Python-2.7.10/Lib/"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="pytools">
+      <source type="archive">
+        <attribute name="url" value="https://pypi.python.org/packages/1a/1e/ce42d53bad97ad16732c8d9ac1dd6ed22a906ea07f291df5f6f90a6c7a2a/pytools-2016.2.1.tar.gz#md5=452dfa3023733a675cc1bee91c536cbd"/>
+        <attribute name="module_directory" value="pytools"/>
+      </source>
+      <build type="none" objdir="no">
+        <attribute name="pre_installation" value="cp -r $SRCDIR/pytools $SRCDIR/../Python-2.7.10/Lib/"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="appdirs">
+      <source type="archive">
+        <attribute name="url" value="https://pypi.python.org/packages/bd/66/0a7f48a0f3fb1d3a4072bceb5bbd78b1a6de4d801fb7135578e7c7b1f563/appdirs-1.4.0.tar.gz#md5=1d17b4c9694ab84794e228f28dc3275b"/>
+        <attribute name="module_directory" value="appdirs"/>
+      </source>
+      <build type="none" objdir="no">
+        <attribute name="pre_installation" value="cp $SRCDIR/appdirs.py $SRCDIR/../Python-2.7.10/Lib/"/>
       </build>
     </module>
 
@@ -1811,6 +1841,9 @@
         <attribute name="module_directory" value="pycuda"/>
       </source>
       <depends_on name="mako" optional="False"/>
+      <depends_on name="decorator" optional="False"/>
+      <depends_on name="pytools" optional="False"/>
+      <depends_on name="appdirs" optional="False"/>
       <depends_on name="bpl_subset" optional="False"/>
       <depends_on name="compyte" optional="False"/>
       <build type="none" objdir="no">
@@ -2233,7 +2266,6 @@
       <depends_on name="bash" optional="True"/>
       <build type="waf" objdir="build">
         <attribute name="supported_os" value="linux;linux2"/>
-        <attribute name="pre_installation" value="rm $INSTALLDIR/lib/libpython2.7.a"/>
         <attribute name="configure_arguments" value="configure --enable-mpi --with-ns3=$INSTALLDIR --with-elf-loader=$INSTALLDIR/lib --with-libaspect=$INSTALLDIR --enable-kernel-stack=$SRCDIR/../net-next-sim-2.6.36/arch --prefix=$INSTALLDIR"/>
         <attribute name="post_installation" value="mkdir $SRCDIR/files-0 ; ln -s $INSTALLDIR/lib/python2.7 $SRCDIR/files-0/ ; cp -r $SRCDIR/../pox $SRCDIR/files-0/ ; cp $SRCDIR/../ryu/bin/ryu-manager $SRCDIR/files-0/ ; cp -r $SRCDIR/../ryu/ryu $SRCDIR/files-0/; cp -r $SRCDIR/../ryu/etc $SRCDIR/files-0/ ; ln -s $SRCDIR/../numpy/numpy $SRCDIR/files-0/ ;ln -s $SRCDIR/../pycuda/pycuda $SRCDIR/files-0/ ; ln -s $INSTALLDIR/jvm/openjdk-1.8.0-internal $SRCDIR/files-0/ ; mkdir $SRCDIR/files-0/dummies ; cp -r $SRCDIR/myscripts/python/proc $SRCDIR/files-0/ ; cd $SRCDIR/myscripts/python/testscripts ; javac PiDigits.java ; cp PiDigits.class $SRCDIR/files-0/ ; echo '00000000000000000000000000000000' >> $SRCDIR/files-0/key.txt ; echo 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. (Filling up enough extra space to make the file a multiple of 16)' >> $SRCDIR/files-0/hello.txt ; mkdir $SRCDIR/files-1 ; echo '00000000000000000000000000000000' >> $SRCDIR/files-1/key.txt"/>
       </build>

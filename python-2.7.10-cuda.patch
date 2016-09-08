@@ -1,6 +1,6 @@
 diff -r 15c95b7d81dc Lib/posixpath.py
 --- a/Lib/posixpath.py	Sat May 23 11:02:14 2015 -0500
-+++ b/Lib/posixpath.py	Wed Aug 17 18:16:29 2016 -0400
++++ b/Lib/posixpath.py	Thu Sep 08 13:14:07 2016 -0400
 @@ -259,7 +259,7 @@
      if i == 1:
          if 'HOME' not in os.environ:
@@ -12,7 +12,7 @@ diff -r 15c95b7d81dc Lib/posixpath.py
      else:
 diff -r 15c95b7d81dc Makefile.pre.in
 --- a/Makefile.pre.in	Sat May 23 11:02:14 2015 -0500
-+++ b/Makefile.pre.in	Wed Aug 17 18:16:29 2016 -0400
++++ b/Makefile.pre.in	Thu Sep 08 13:14:07 2016 -0400
 @@ -970,6 +970,12 @@
  		encodings compiler hotshot \
  		email email/mime email/test email/test/data \
@@ -26,7 +26,7 @@ diff -r 15c95b7d81dc Makefile.pre.in
  		json json/tests \
  		sqlite3 sqlite3/test \
  		logging bsddb bsddb/test csv importlib wsgiref \
-@@ -979,6 +985,11 @@
+@@ -979,6 +985,12 @@
  		idlelib idlelib/Icons idlelib/idle_test \
  		distutils distutils/command distutils/tests $(XMLLIBSUBDIRS) \
  		multiprocessing multiprocessing/dummy \
@@ -35,12 +35,13 @@ diff -r 15c95b7d81dc Makefile.pre.in
 +		repoze repoze/lru \
 +		markupsafe \
 +		mako make/ext \
++		pytools \
  		unittest unittest/test \
  		lib-old \
  		curses pydoc_data $(MACHDEPS)
 diff -r 15c95b7d81dc Modules/Setup.dist
 --- a/Modules/Setup.dist	Sat May 23 11:02:14 2015 -0500
-+++ b/Modules/Setup.dist	Wed Aug 17 18:16:29 2016 -0400
++++ b/Modules/Setup.dist	Thu Sep 08 13:14:07 2016 -0400
 @@ -163,77 +163,77 @@
  # it, depending on your system -- see the GNU readline instructions.
  # It's okay for this to be a shared library, too.
@@ -235,7 +236,7 @@ diff -r 15c95b7d81dc Modules/Setup.dist
 +
 diff -r 15c95b7d81dc setup.py
 --- a/setup.py	Sat May 23 11:02:14 2015 -0500
-+++ b/setup.py	Wed Aug 17 18:16:29 2016 -0400
++++ b/setup.py	Thu Sep 08 13:14:07 2016 -0400
 @@ -283,9 +283,9 @@
  
      def build_extension(self, ext):
