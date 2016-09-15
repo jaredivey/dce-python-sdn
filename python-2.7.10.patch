@@ -57,7 +57,7 @@ diff -r 15c95b7d81dc Modules/Setup.dist
 -#operator operator.c	# operator.add() and similar goodies
 +array arraymodule.c	# array objects
 +cmath cmathmodule.c _math.c # -lm # complex math library functions
-+math mathmodule.c _math.c # -lm # math library functions, e.g. sin()
++math mathmodule.c # _math.c # -lm # math library functions, e.g. sin()
 +_struct _struct.c	# binary structure packing/unpacking
 +time timemodule.c # -lm # time operations and variables
 +operator operator.c	# operator.add() and similar goodies
@@ -117,7 +117,7 @@ diff -r 15c95b7d81dc Modules/Setup.dist
  
  # Socket module helper for socket(2)
 -#_socket socketmodule.c timemodule.c
-+_socket socketmodule.c timemodule.c
++_socket socketmodule.c # timemodule.c
  
  # Socket module helper for SSL support; you must comment out the other
  # socket line above, and possibly edit the SSL variable:
@@ -222,7 +222,7 @@ diff -r 15c95b7d81dc Modules/Setup.dist
 +
 +lapack_lite numpy/linalg/lapack_lite/python_xerbla.c numpy/linalg/lapack_lite/blas_lite.c numpy/linalg/lapack_lite/dlamch.c numpy/linalg/lapack_lite/dlapack_lite.c numpy/linalg/lapack_lite/f2c_lite.c numpy/linalg/lapack_lite/zlapack_lite.c numpy/linalg/lapack_litemodule.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite/linalg -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
 +
-+_umath_linalg numpy/linalg/lapack_lite/python_xerbla.c numpy/linalg/lapack_lite/blas_lite.c numpy/linalg/lapack_lite/dlamch.c numpy/linalg/lapack_lite/dlapack_lite.c numpy/linalg/lapack_lite/f2c_lite.c numpy/linalg/lapack_lite/zlapack_lite.c numpy/linalg/umath_linalg.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite/linalg -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath
++_umath_linalg numpy/linalg/umath_linalg.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite/linalg -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath
 +
 +mtrand numpy/random/mtrand/distributions.c numpy/random/mtrand/initarray.c numpy/random/mtrand/randomkit.c numpy/random/mtrand/mtrand.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/ -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
 diff -r 15c95b7d81dc setup.py

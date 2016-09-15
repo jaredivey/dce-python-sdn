@@ -232,7 +232,7 @@ diff -r 15c95b7d81dc Modules/Setup.dist
 +# _cudadriver module (PyCuda)
 +_pvt_struct pycuda/wrapper/_pvt_struct_v2.cpp -I$(srcdir)/Include -I$(srcdir)/Modules/pycuda/wrapper -I$(srcdir)/Modules/numpy/core/include
 +
-+_cudadriver pycuda/cpp/cuda.cpp pycuda/cpp/bitlog.cpp pycuda/wrapper/wrap_cudadrv.cpp pycuda/wrapper/mempool.cpp pycuda/wrapper/wrap_curand.cpp -I/usr/local/cuda/include -I$(srcdir)/Include -I$(srcdir)/Modules/pycuda/cpp -I$(srcdir)/Modules/pycuda/wrapper -I$(srcdir)/Modules/numpy/core/include -L/usr/lib/x86_64-linux-gnu -lcuda -lboost_python-py27 -lboost_thread -lboost_system -L/usr/local/cuda/lib64 -lcudart -lcurand -lpython2.7
++_cudadriver pycuda/cpp/cuda.cpp pycuda/cpp/bitlog.cpp pycuda/wrapper/wrap_cudadrv.cpp pycuda/wrapper/mempool.cpp pycuda/wrapper/wrap_curand.cpp -I/usr/local/cuda/include -I$(srcdir)/Include -I$(srcdir)/Modules/pycuda/cpp -I$(srcdir)/Modules/pycuda/wrapper -I$(srcdir)/Modules/numpy/core/include -L$(srcdir)/../../build/lib -lboost_python-ns3 -L/usr/lib/x86_64-linux-gnu -lcuda -lboost_thread -lboost_system -L/usr/local/cuda/lib64 -lcudart -lcurand
 +
 diff -r 15c95b7d81dc setup.py
 --- a/setup.py	Sat May 23 11:02:14 2015 -0500
