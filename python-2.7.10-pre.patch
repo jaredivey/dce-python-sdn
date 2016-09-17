@@ -1,6 +1,6 @@
 diff -r 15c95b7d81dc Lib/posixpath.py
 --- a/Lib/posixpath.py	Sat May 23 11:02:14 2015 -0500
-+++ b/Lib/posixpath.py	Mon Sep 12 16:13:54 2016 -0400
++++ b/Lib/posixpath.py	Fri Sep 16 13:57:49 2016 -0400
 @@ -259,7 +259,7 @@
      if i == 1:
          if 'HOME' not in os.environ:
@@ -10,38 +10,9 @@ diff -r 15c95b7d81dc Lib/posixpath.py
          else:
              userhome = os.environ['HOME']
      else:
-diff -r 15c95b7d81dc Makefile.pre.in
---- a/Makefile.pre.in	Sat May 23 11:02:14 2015 -0500
-+++ b/Makefile.pre.in	Mon Sep 12 16:13:54 2016 -0400
-@@ -970,6 +970,12 @@
- 		encodings compiler hotshot \
- 		email email/mime email/test email/test/data \
- 		ensurepip ensurepip/_bundled \
-+        setuptools setuptools/command setuptools/extern \
-+        pkg_resources \
-+        pkg_resources/_vendor pkg_resources/_vendor/packaging pkg_resources/extern \
-+		eventlet \
-+		eventlet/green eventlet/green/http eventlet/green/OpenSSL eventlet/green/urllib \
-+		eventlet/greenio eventlet/hubs eventlet/support \
- 		json json/tests \
- 		sqlite3 sqlite3/test \
- 		logging bsddb bsddb/test csv importlib wsgiref \
-@@ -979,6 +985,12 @@
- 		idlelib idlelib/Icons idlelib/idle_test \
- 		distutils distutils/command distutils/tests $(XMLLIBSUBDIRS) \
- 		multiprocessing multiprocessing/dummy \
-+		netaddr netaddr/eui netaddr/ip netaddr/strategy netaddr/tools \
-+		oslo_config routes webob \
-+		repoze repoze/lru \
-+		markupsafe \
-+		mako make/ext \
-+		pytools \
- 		unittest unittest/test \
- 		lib-old \
- 		curses pydoc_data $(MACHDEPS)
 diff -r 15c95b7d81dc Modules/Setup.dist
 --- a/Modules/Setup.dist	Sat May 23 11:02:14 2015 -0500
-+++ b/Modules/Setup.dist	Mon Sep 12 16:13:54 2016 -0400
++++ b/Modules/Setup.dist	Fri Sep 16 13:57:49 2016 -0400
 @@ -163,77 +163,77 @@
  # it, depending on your system -- see the GNU readline instructions.
  # It's okay for this to be a shared library, too.
@@ -60,9 +31,9 @@ diff -r 15c95b7d81dc Modules/Setup.dist
 -#operator operator.c	# operator.add() and similar goodies
 +array arraymodule.c	# array objects
 +cmath cmathmodule.c _math.c # -lm # complex math library functions
-+math mathmodule.c #_math.c -lm # math library functions, e.g. sin()
++math mathmodule.c # _math.c # -lm # math library functions, e.g. sin()
 +_struct _struct.c	# binary structure packing/unpacking
-+time timemodule.c # time operations and variables
++time timemodule.c # -lm # time operations and variables
 +operator operator.c	# operator.add() and similar goodies
  #_testcapi _testcapimodule.c    # Python C API test module
 -#_random _randommodule.c	# Random number generator
@@ -120,7 +91,7 @@ diff -r 15c95b7d81dc Modules/Setup.dist
  
  # Socket module helper for socket(2)
 -#_socket socketmodule.c timemodule.c
-+_socket socketmodule.c #timemodule.c
++_socket socketmodule.c # timemodule.c
  
  # Socket module helper for SSL support; you must comment out the other
  # socket line above, and possibly edit the SSL variable:
@@ -199,13 +170,10 @@ diff -r 15c95b7d81dc Modules/Setup.dist
  
  # Interface to the Expat XML parser
  #
-@@ -497,3 +497,34 @@
+@@ -497,3 +497,13 @@
  
  # Another example -- the 'xxsubtype' module shows C-level subtyping in action
  xxsubtype xxsubtype.c
-+
-+# Greenlet module
-+greenlet greenlet/greenlet.c
 +
 +# _ctypes builtin
 +_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/stgdict.c _ctypes/cfield.c -I$(srcdir)/Include -I$(srcdir)/Modules/_ctypes -I$(srcdir)/Modules/_ctypes/libffi/x86_64-unknown-linux-gnu/include -L$(srcdir)/Modules/_ctypes/libffi/lib -L/usr/lib/x86_64-linux-gnu -lffi
@@ -216,27 +184,9 @@ diff -r 15c95b7d81dc Modules/Setup.dist
 +# future_builtins builtin
 +future_builtins future_builtins.c
 +
-+# Numpy modules
-+multiarray numpy/core/src/multiarray/alloc.c numpy/core/src/multiarray/array_assign.c numpy/core/src/multiarray/array_assign_array.c numpy/core/src/multiarray/array_assign_scalar.c numpy/core/src/multiarray/arrayobject.c numpy/core/src/multiarray/arraytypes.c numpy/core/src/multiarray/buffer.c numpy/core/src/multiarray/calculation.c numpy/core/src/multiarray/common.c numpy/core/src/multiarray/compiled_base.c numpy/core/src/multiarray/conversion_utils.c numpy/core/src/multiarray/convert.c numpy/core/src/multiarray/convert_datatype.c numpy/core/src/multiarray/ctors.c numpy/core/src/multiarray/datetime.c numpy/core/src/multiarray/datetime_busday.c numpy/core/src/multiarray/datetime_busdaycal.c numpy/core/src/multiarray/datetime_strings.c numpy/core/src/multiarray/descriptor.c numpy/core/src/multiarray/dtype_transfer.c numpy/core/src/multiarray/einsum.c numpy/core/src/multiarray/flagsobject.c numpy/core/src/multiarray/getset.c numpy/core/src/multiarray/hashdescr.c numpy/core/src/multiarray/item_selection.c numpy/core/src/multiarray/iterators.c numpy/core/src/multiarray/lowlevel_strided_loops.c numpy/core/src/multiarray/mapping.c numpy/core/src/multiarray/methods.c numpy/core/src/multiarray/multiarraymodule.c numpy/core/src/multiarray/nditer_api.c numpy/core/src/multiarray/nditer_constr.c numpy/core/src/multiarray/nditer_pywrap.c numpy/core/src/multiarray/nditer_templ.c numpy/core/src/multiarray/number.c numpy/core/src/multiarray/numpymemoryview.c numpy/core/src/multiarray/numpyos.c numpy/core/src/multiarray/refcount.c numpy/core/src/multiarray/scalarapi.c numpy/core/src/multiarray/scalartypes.c numpy/core/src/multiarray/sequence.c numpy/core/src/multiarray/shape.c numpy/core/src/multiarray/ucsnarrow.c numpy/core/src/multiarray/usertypes.c numpy/core/src/multiarray/vdot.c numpy/core/src/private/mem_overlap.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/multiarray -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath -lnpysort
-+
-+umath numpy/core/src/umath/loops.c numpy/core/src/umath/reduction.c numpy/core/src/umath/scalarmath.c numpy/core/src/umath/ufunc_object.c numpy/core/src/umath/ufunc_type_resolution.c numpy/core/src/umath/umathmodule.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/umath -I$(srcdir)/Modules/numpy/core/src/multiarray -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath -lnpysort
-+
-+fftpack_lite numpy/fft/fftpack_litemodule.c numpy/fft/fftpack.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/fft -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
-+
-+lapack_lite numpy/linalg/lapack_litemodule.c numpy/linalg/lapack_lite/python_xerbla.c numpy/linalg/lapack_lite/blas_lite.c numpy/linalg/lapack_lite/dlamch.c numpy/linalg/lapack_lite/dlapack_lite.c numpy/linalg/lapack_lite/f2c_lite.c numpy/linalg/lapack_lite/zlapack_lite.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite/linalg -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
-+
-+_umath_linalg numpy/linalg/umath_linalg.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite/linalg -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath
-+
-+mtrand numpy/random/mtrand/distributions.c numpy/random/mtrand/initarray.c numpy/random/mtrand/randomkit.c numpy/random/mtrand/mtrand.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/ -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
-+
-+# _cudadriver module (PyCuda)
-+_pvt_struct pycuda/wrapper/_pvt_struct_v2.cpp -I$(srcdir)/Include -I$(srcdir)/Modules/pycuda/wrapper -I$(srcdir)/Modules/numpy/core/include
-+
-+_cudadriver pycuda/cpp/cuda.cpp pycuda/cpp/bitlog.cpp pycuda/wrapper/wrap_cudadrv.cpp pycuda/wrapper/mempool.cpp pycuda/wrapper/wrap_curand.cpp -I/usr/local/cuda/include -I$(srcdir)/Include -I$(srcdir)/Modules/pycuda/cpp -I$(srcdir)/Modules/pycuda/wrapper -I$(srcdir)/Modules/numpy/core/include -L$(srcdir)/../../build/lib -lboost_python -L/usr/lib/x86_64-linux-gnu -lcuda -lboost_thread -lboost_system -L/usr/local/cuda/lib64 -lcudart -lcurand
-+
 diff -r 15c95b7d81dc setup.py
 --- a/setup.py	Sat May 23 11:02:14 2015 -0500
-+++ b/setup.py	Mon Sep 12 16:13:54 2016 -0400
++++ b/setup.py	Fri Sep 16 13:57:49 2016 -0400
 @@ -283,9 +283,9 @@
  
      def build_extension(self, ext):

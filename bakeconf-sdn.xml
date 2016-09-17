@@ -1731,7 +1731,22 @@
         <attribute name="supported_os" value="linux;linux2"/>
         <attribute name="configure_arguments" value="./configure 'CFLAGS=-fPIC' 'CXXFLAGS=-fpic' 'LINKFORSHARED=-pie -rdynamic' --enable-shared --enable-unicode=ucs4 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
         <attribute name="pre_installation" value="cd $SRCDIR/Modules/_ctypes/libffi ; ./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CPPFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --prefix=$SRCDIR/Modules/_ctypes/libffi ; make install"/>
-        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10 ; mv $INSTALLDIR/lib/libpython2.7.a $INSTALLDIR/lib/libpython2.7.x"/>
+        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="Python-2.7.10-pre">
+      <source type="mercurial">
+          <attribute name="url" value="https://hg.python.org/cpython"/>
+        <attribute name="module_directory" value="Python-2.7.10-pre"/>
+        <attribute name="revision" value="v2.7.10" />
+        <attribute name="patch" value="$SRCDIR/../../python-2.7.10-pre.patch" />
+      </source>
+      <build type="autotools" objdir="no">
+        <attribute name="supported_os" value="linux;linux2"/>
+        <attribute name="configure_arguments" value="./configure 'CXX=g++' 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --enable-shared --with-cxx-main='g++' --enable-unicode=ucs4 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+        <attribute name="pre_installation" value="cd $SRCDIR/Modules/_ctypes/libffi ; ./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CPPFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --prefix=$SRCDIR/Modules/_ctypes/libffi ; make install"/>
+        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-pre"/>
       </build>
     </module>
 
@@ -1755,9 +1770,9 @@
       <depends_on name="pycuda" optional="False"/>
       <build type="autotools" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
-        <attribute name="configure_arguments" value="./configure 'CXX=g++' 'CFLAGS=-fPIC' 'CXXFLAGS=-fpic' 'LINKFORSHARED=-pie -rdynamic' --enable-shared --with-cxx-main='g++' --enable-unicode=ucs4 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
+        <attribute name="configure_arguments" value="./configure 'CXX=g++' 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --enable-shared --with-cxx-main='g++' --enable-unicode=ucs4 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
         <attribute name="pre_installation" value="cd $SRCDIR/Modules/_ctypes/libffi ; ./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CPPFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --prefix=$SRCDIR/Modules/_ctypes/libffi ; make install"/>
-        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10 ; mv $INSTALLDIR/lib/libpython2.7.a $INSTALLDIR/lib/libpython2.7.x"/>
+        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10"/>
       </build>
     </module>
 
@@ -1766,8 +1781,9 @@
         <attribute name="url" value="http://downloads.sourceforge.net/project/boost/boost/1.54.0/boost_1_54_0.tar.gz"/>
         <attribute name="module_directory" value="boost"/>
       </source>
+      <depends_on name="Python-2.7.10-pre" optional="False"/>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cd $SRCDIR ; patch -i $SRCDIR/../../libboost_python.patch tools/build/v2/tools/python.jam ; ./bootstrap.sh --with-libraries=python --with-python-version=2.7 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR ; ./b2 ; ./b2 install ; ln -s $INSTALLDIR/lib/libboost_python.so $INSTALLDIR/lib/libboost_python-ns3.so"/>
+        <attribute name="pre_installation" value="cd $SRCDIR ; patch -i $SRCDIR/../../libboost_python.patch tools/build/v2/tools/python.jam ; ./bootstrap.sh --libdir=$INSTALLDIR/lib --with-libraries=python --with-python-version=2.7 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR ; ./b2 ; ./b2 install"/>
       </build>
     </module>
 
