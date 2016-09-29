@@ -1,6 +1,6 @@
 diff -r 15c95b7d81dc Lib/posixpath.py
 --- a/Lib/posixpath.py	Sat May 23 11:02:14 2015 -0500
-+++ b/Lib/posixpath.py	Mon Sep 12 16:13:54 2016 -0400
++++ b/Lib/posixpath.py	Mon Sep 26 15:03:08 2016 -0400
 @@ -259,7 +259,7 @@
      if i == 1:
          if 'HOME' not in os.environ:
@@ -12,7 +12,16 @@ diff -r 15c95b7d81dc Lib/posixpath.py
      else:
 diff -r 15c95b7d81dc Makefile.pre.in
 --- a/Makefile.pre.in	Sat May 23 11:02:14 2015 -0500
-+++ b/Makefile.pre.in	Mon Sep 12 16:13:54 2016 -0400
++++ b/Makefile.pre.in	Mon Sep 26 15:03:08 2016 -0400
+@@ -488,7 +488,7 @@
+ 	$(AR) $(ARFLAGS) $@ $(MODOBJS)
+ 	$(RANLIB) $@
+ 
+-libpython$(VERSION).so: $(LIBRARY_OBJS)
++libpython$(VERSION)_ns3.so: $(LIBRARY_OBJS)
+ 	if test $(INSTSONAME) != $(LDLIBRARY); then \
+ 		$(BLDSHARED) -Wl,-h$(INSTSONAME) -o $(INSTSONAME) $(LIBRARY_OBJS) $(MODLIBS) $(SHLIBS) $(LIBC) $(LIBM) $(LDLAST); \
+ 		$(LN) -f $(INSTSONAME) $@; \
 @@ -970,6 +970,12 @@
  		encodings compiler hotshot \
  		email email/mime email/test email/test/data \
@@ -41,7 +50,7 @@ diff -r 15c95b7d81dc Makefile.pre.in
  		curses pydoc_data $(MACHDEPS)
 diff -r 15c95b7d81dc Modules/Setup.dist
 --- a/Modules/Setup.dist	Sat May 23 11:02:14 2015 -0500
-+++ b/Modules/Setup.dist	Mon Sep 12 16:13:54 2016 -0400
++++ b/Modules/Setup.dist	Mon Sep 26 15:03:08 2016 -0400
 @@ -163,77 +163,77 @@
  # it, depending on your system -- see the GNU readline instructions.
  # It's okay for this to be a shared library, too.
@@ -60,7 +69,7 @@ diff -r 15c95b7d81dc Modules/Setup.dist
 -#operator operator.c	# operator.add() and similar goodies
 +array arraymodule.c	# array objects
 +cmath cmathmodule.c _math.c # -lm # complex math library functions
-+math mathmodule.c #_math.c -lm # math library functions, e.g. sin()
++math mathmodule.c _math.c -lm # math library functions, e.g. sin()
 +_struct _struct.c	# binary structure packing/unpacking
 +time timemodule.c # time operations and variables
 +operator operator.c	# operator.add() and similar goodies
@@ -120,7 +129,7 @@ diff -r 15c95b7d81dc Modules/Setup.dist
  
  # Socket module helper for socket(2)
 -#_socket socketmodule.c timemodule.c
-+_socket socketmodule.c #timemodule.c
++_socket socketmodule.c timemodule.c
  
  # Socket module helper for SSL support; you must comment out the other
  # socket line above, and possibly edit the SSL variable:
@@ -225,18 +234,41 @@ diff -r 15c95b7d81dc Modules/Setup.dist
 +
 +lapack_lite numpy/linalg/lapack_litemodule.c numpy/linalg/lapack_lite/python_xerbla.c numpy/linalg/lapack_lite/blas_lite.c numpy/linalg/lapack_lite/dlamch.c numpy/linalg/lapack_lite/dlapack_lite.c numpy/linalg/lapack_lite/f2c_lite.c numpy/linalg/lapack_lite/zlapack_lite.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite/linalg -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
 +
-+_umath_linalg numpy/linalg/umath_linalg.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite/linalg -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath
++_umath_linalg numpy/linalg/umath_linalg.c numpy/linalg/lapack_lite/python_xerbla.c numpy/linalg/lapack_lite/blas_lite.c numpy/linalg/lapack_lite/dlamch.c numpy/linalg/lapack_lite/dlapack_lite.c numpy/linalg/lapack_lite/f2c_lite.c numpy/linalg/lapack_lite/zlapack_lite.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite/linalg -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath
 +
 +mtrand numpy/random/mtrand/distributions.c numpy/random/mtrand/initarray.c numpy/random/mtrand/randomkit.c numpy/random/mtrand/mtrand.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/ -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
 +
 +# _cudadriver module (PyCuda)
 +_pvt_struct pycuda/wrapper/_pvt_struct_v2.cpp -I$(srcdir)/Include -I$(srcdir)/Modules/pycuda/wrapper -I$(srcdir)/Modules/numpy/core/include
 +
-+_cudadriver pycuda/cpp/cuda.cpp pycuda/cpp/bitlog.cpp pycuda/wrapper/wrap_cudadrv.cpp pycuda/wrapper/mempool.cpp pycuda/wrapper/wrap_curand.cpp -I/usr/local/cuda/include -I$(srcdir)/Include -I$(srcdir)/Modules/pycuda/cpp -I$(srcdir)/Modules/pycuda/wrapper -I$(srcdir)/Modules/numpy/core/include -L$(srcdir)/../../build/lib -lboost_python -L/usr/lib/x86_64-linux-gnu -lcuda -lboost_thread -lboost_system -L/usr/local/cuda/lib64 -lcudart -lcurand
++_cudadriver bpl_subset/libs/smart_ptr/src/sp_collector.cpp bpl_subset/libs/smart_ptr/src/sp_debug_hooks.cpp bpl_subset/libs/python/src/bpl_errors.cpp bpl_subset/libs/python/src/bpl_import.cpp bpl_subset/libs/python/src/long.cpp bpl_subset/libs/python/src/numeric.cpp bpl_subset/libs/python/src/object_operators.cpp bpl_subset/libs/python/src/slice.cpp bpl_subset/libs/python/src/tuple.cpp bpl_subset/libs/python/src/dict.cpp bpl_subset/libs/python/src/exec.cpp bpl_subset/libs/python/src/list.cpp bpl_subset/libs/python/src/module.cpp bpl_subset/libs/python/src/object_protocol.cpp bpl_subset/libs/python/src/str.cpp bpl_subset/libs/python/src/wrapper.cpp bpl_subset/libs/python/src/converter/arg_to_python_base.cpp bpl_subset/libs/python/src/converter/builtin_converters.cpp bpl_subset/libs/python/src/converter/from_python.cpp bpl_subset/libs/python/src/converter/registry.cpp bpl_subset/libs/python/src/converter/type_id.cpp bpl_subset/libs/python/src/object/class.cpp bpl_subset/libs/python/src/object/function.cpp bpl_subset/libs/python/src/object/inheritance.cpp bpl_subset/libs/python/src/object/life_support.cpp bpl_subset/libs/python/src/object/stl_iterator.cpp bpl_subset/libs/python/src/object/enum.cpp bpl_subset/libs/python/src/object/function_doc_signature.cpp bpl_subset/libs/python/src/object/iterator.cpp bpl_subset/libs/python/src/object/pickle_support.cpp bpl_subset/libs/system/src/error_code.cpp bpl_subset/libs/thread/src/bpl_future.cpp bpl_subset/libs/thread/src/tss_null.cpp bpl_subset/libs/thread/src/pthread/once.cpp bpl_subset/libs/thread/src/pthread/bpl_thread.cpp pycuda/cpp/cuda.cpp pycuda/cpp/bitlog.cpp pycuda/wrapper/wrap_cudadrv.cpp pycuda/wrapper/mempool.cpp pycuda/wrapper/wrap_curand.cpp -I/usr/local/cuda/include -I$(srcdir)/Include -I$(srcdir)/Modules/bpl_subset -I$(srcdir)/Modules/pycuda/cpp -I$(srcdir)/Modules/pycuda/wrapper -I$(srcdir)/Modules/numpy/core/include -L/usr/lib/x86_64-linux-gnu -lcuda -L/usr/local/cuda/lib64 -lcudart -lcurand
 +
+diff -r 15c95b7d81dc configure
+--- a/configure	Sat May 23 11:02:14 2015 -0500
++++ b/configure	Mon Sep 26 15:03:08 2016 -0400
+@@ -5202,7 +5202,7 @@
+ $as_echo_n "checking LIBRARY... " >&6; }
+ if test -z "$LIBRARY"
+ then
+-	LIBRARY='libpython$(VERSION).a'
++	LIBRARY='libpython$(VERSION)_ns3.a'
+ fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $LIBRARY" >&5
+ $as_echo "$LIBRARY" >&6; }
+@@ -5374,8 +5374,8 @@
+ 	  INSTSONAME="$LDLIBRARY".$SOVERSION
+           ;;
+     Linux*|GNU*|NetBSD*|FreeBSD*|DragonFly*|OpenBSD*)
+-	  LDLIBRARY='libpython$(VERSION).so'
+-	  BLDLIBRARY='-L. -lpython$(VERSION)'
++	  LDLIBRARY='libpython$(VERSION)_ns3.so'
++	  BLDLIBRARY='-L. -lpython$(VERSION)_ns3'
+ 	  RUNSHARED=LD_LIBRARY_PATH=`pwd`${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+ 	  case $ac_sys_system in
+ 	      FreeBSD*)
 diff -r 15c95b7d81dc setup.py
 --- a/setup.py	Sat May 23 11:02:14 2015 -0500
-+++ b/setup.py	Mon Sep 12 16:13:54 2016 -0400
++++ b/setup.py	Mon Sep 26 15:03:08 2016 -0400
 @@ -283,9 +283,9 @@
  
      def build_extension(self, ext):
