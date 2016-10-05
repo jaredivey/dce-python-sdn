@@ -2416,6 +2416,7 @@
         <attribute name="url" value="https://bitbucket.org/ljerezchaves/ofswitch13-module"/>
         <attribute name="module_directory" value="ofswitch13"/>
         <attribute name="revision" value="2.0.2"/>
+        <attribute name="patch" value="$SRCDIR/../../ofswitch13.patch" />
       </source>
       <build type="none">
         <attribute name="supported_os" value="linux;linux2"/>

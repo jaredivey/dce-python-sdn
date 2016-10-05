@@ -1,0 +1,31 @@
+diff -r 4465c6f86068 helper/ofswitch13-helper.cc
+--- a/helper/ofswitch13-helper.cc	Mon Apr 11 19:07:47 2016 -0300
++++ b/helper/ofswitch13-helper.cc	Wed Oct 05 15:51:01 2016 -0400
+@@ -343,17 +343,21 @@
+ OFSwitch13Helper::InstallExternalController (Ptr<Node> cNode)
+ {
+   NS_LOG_FUNCTION (this << cNode);
+-  NS_ASSERT_MSG (m_channelType == OFSwitch13Helper::SINGLECSMA,
+-                 "External controller must use SINGLECSMA openflow channel");
++  //NS_ASSERT_MSG (m_channelType == OFSwitch13Helper::SINGLECSMA,
++  //               "External controller must use SINGLECSMA openflow channel");
+ 
+   // Connecting the controller node (TapBridge) to common csma network
+   m_ctrlNode = cNode;
+   m_internet.Install (m_ctrlNode);
+-  m_ctrlDevs.Add (m_csmaHelper.Install (m_ctrlNode, m_csmaChannel));
+-  Ipv4InterfaceContainer ctrlIface = m_ipv4helper.Assign (m_ctrlDevs);
+-  m_ctrlAddr = InetSocketAddress (ctrlIface.GetAddress (0), m_ctrlPort);
++  if (m_channelType == OFSwitch13Helper::SINGLECSMA)
++  {
++	  m_ctrlDevs.Add (m_csmaHelper.Install (m_ctrlNode, m_csmaChannel));
++	  Ipv4InterfaceContainer ctrlIface = m_ipv4helper.Assign (m_ctrlDevs);
++	  m_ctrlAddr = InetSocketAddress (ctrlIface.GetAddress (0), m_ctrlPort);
+ 
+-  return m_ctrlDevs.Get (0);
++	  return m_ctrlDevs.Get (0);
++  }
++  return 0;
+ }
+ 
+ void
