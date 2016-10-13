@@ -100,9 +100,39 @@ class SimpleSwitch13(app_manager.RyuApp):
         
         dst = eth.dst
         src = eth.src
+
+        dpid = datapath.id
+        self.mac_to_port.setdefault(dpid, {})
         
+        # Figure out environment
+        links = api.get_all_link(self)
+        switches = api.get_all_switch(self)
+        hosts = api.get_all_host(self)
+        
+        arp_pkt = None
+        if eth.ethertype == ether_types.ETH_TYPE_ARP:
+            arp_pkt = pkt.get_protocols(arp.arp)[0]
+            if arp_pkt.opcode == arp.ARP_REQUEST:
+                # learn a mac address to avoid FLOOD next time.
+                self.mac_to_port[dpid][src] = in_port
+                
+                # Send to ARP proxy. Cannot perform NIx routing until both hosts
+                # are known by the controller
+                self.ArpProxy (msg.data, datapath, in_port, links, switches, hosts)
+                return
+        
+        self.logger.info("%s: packet in %s %s %s %s", time.time(), dpid, src, dst, in_port)
+
+        # learn a mac address to avoid FLOOD next time.
+        self.mac_to_port[dpid][src] = in_port
+        
+        # Start nix vector code        
+        numNodes = len(switches) + len(hosts)
+        self.logger.info("Number of nodes: %s", numNodes)
         src_ip = ''
         dst_ip = ''
+        srcNode = ''
+        dstNode = ''
         if eth.ethertype == ether_types.ETH_TYPE_ARP:
             arp_pkt = pkt.get_protocols(arp.arp)[0]
             src_ip = arp_pkt.src_ip
@@ -111,46 +141,17 @@ class SimpleSwitch13(app_manager.RyuApp):
             ipv4_pkt = pkt.get_protocols(ipv4.ipv4)[0]
             src_ip = ipv4_pkt.src
             dst_ip = ipv4_pkt.dst
-
-        dpid = datapath.id
-        self.mac_to_port.setdefault(dpid, {})
-
-        self.logger.info("%s: packet in %s %s %s %s", time.time(), dpid, src, dst, in_port)
-
-        # learn a mac address to avoid FLOOD next time.
-        self.mac_to_port[dpid][src] = in_port
-        
-        # Start nix vector code
-        links = api.get_all_link(self)
-        switches = api.get_all_switch(self)
-        hosts = api.get_all_host(self)
-        
-        numNodes = len(switches) + len(hosts)
-        srcNode = ''
-        dstNode = ''
         for host in hosts:
             if src_ip == host.ipv4[0]:
                 srcNode = host
             if dst_ip == host.ipv4[0]:
                 dstNode = host
-            # if it's not this simple, need to look at gateways...
             
-        foundIt, parentVec = self.BFS (numNodes, srcNode, dstNode)
-        self.logger.info ("%s %s", foundIt, parentVec)
-        
-        #for link in links:
-        #    self.logger.info("%s<%s,%s,%s,%s>",
-        #                     link.src.name, link.src.dpid,
-        #                     link.src.port_no, link.src.hw_addr,
-        #                     link.src.is_live())
-        #    self.logger.info("\tto")
-        #    self.logger.info("\t\t%s<%s,%s,%s,%s>",
-        #                     link.dst.name, link.dst.dpid,
-        #                     link.dst.port_no, link.dst.hw_addr,
-        #                     link.dst.is_live())
-        #for switch in switches:
-        #    self.logger.info("%s", switch)
+        foundIt, parentVec = self.BFS (numNodes, srcNode, dstNode,
+                                       links, switches, hosts)
+        #self.logger.info ("%s %s", foundIt, parentVec)
 
+        # The rest of this function is L2 learning. Need to delete once NIx is working
         if dst in self.mac_to_port[dpid]:
             out_port = self.mac_to_port[dpid][dst]
         else:
@@ -169,6 +170,7 @@ class SimpleSwitch13(app_manager.RyuApp):
             else:
                 self.add_flow(datapath, 1, match, actions)
         data = None
+        
         if msg.buffer_id == ofproto.OFP_NO_BUFFER:
             data = msg.data
 
@@ -176,8 +178,41 @@ class SimpleSwitch13(app_manager.RyuApp):
                                   in_port=in_port, actions=actions, data=data)
         datapath.send_msg(out)
         
-    def BFS (self, nNodes, srcNode, dstNode):
-        parentVector = []
-        self.logger.info("BFS: %s %s %s", nNodes, srcNode, dstNode)
+    def ArpProxy (self, data, datapath, in_port, links, switches, hosts):
+        for switch in switches:
+            # Get all usable ports for this switch and then remove those ports
+            # associated with switch-to-switch connections to look at edge ports
+            all_ports = set([port.port_no for port in switch.ports if port.is_live()])
+            src_ports = set([link.src.port_no for link in links if link.src.dpid == switch.dp.id and link.src.is_live()])
+            dst_ports = set([link.dst.port_no for link in links if link.dst.dpid == switch.dp.id and link.dst.is_live()])
+            link_ports = src_ports | dst_ports
+            non_link_ports = list(all_ports - link_ports)
+            
+            # Push an ARP request out of the network edges
+            for port in non_link_ports:
+                if switch.dp != datapath or port != in_port:
+                    actions = [switch.dp.ofproto_parser.OFPActionOutput(port)]
+                    out = switch.dp.ofproto_parser.OFPPacketOut(datapath=switch.dp,
+                                              buffer_id=switch.dp.ofproto.OFP_NO_BUFFER,
+                                              in_port=switch.dp.ofproto.OFPP_CONTROLLER,
+                                              actions=actions, data=data)
+                    
+                    self.logger.info("Sending ARP Request: dpid=%s, port=%s", switch.dp.id, port)
+                    switch.dp.send_msg(out)
         
+    def BFS (self, nNodes, srcNode, dstNode, links, switches, hosts):
+        self.logger.info("BFS: %s %s %s", nNodes, srcNode, dstNode)
+        greyNodeList = [(switch, srcNode.port) for switch in switches if switch.dp.id == srcNode.port.dpid]
+        dstCombo = [(switch, dstNode.port) for switch in switches if switch.dp.id == dstNode.port.dpid][0]
+        
+        # Make sure we only start and end with one switch (in case a host is
+        # available from multiple switches)
+        while len(greyNodeList) > 1:
+            del(greyNodeList[-1])
+        
+        parentVector = greyNodeList
+#         while len(greyNodeList) != 0:
+#              currNode = greyNodeList[0]
+#              if (currNode == dstCombo):
+#                  return True, parentVector            
         return False, parentVector
