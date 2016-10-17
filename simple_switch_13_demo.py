@@ -128,7 +128,6 @@ class SimpleSwitch13(app_manager.RyuApp):
         
         # Start nix vector code        
         numNodes = len(switches) + len(hosts)
-        self.logger.info("Number of nodes: %s", numNodes)
         src_ip = ''
         dst_ip = ''
         srcNode = ''
@@ -146,37 +145,50 @@ class SimpleSwitch13(app_manager.RyuApp):
                 srcNode = host
             if dst_ip == host.ipv4[0]:
                 dstNode = host
-            
-        foundIt, parentVec = self.BFS (numNodes, srcNode, dstNode,
-                                       links, switches, hosts)
-        #self.logger.info ("%s %s", foundIt, parentVec)
-
-        # The rest of this function is L2 learning. Need to delete once NIx is working
-        if dst in self.mac_to_port[dpid]:
-            out_port = self.mac_to_port[dpid][dst]
-        else:
-            out_port = ofproto.OFPP_FLOOD
-
-        actions = [parser.OFPActionOutput(out_port)]
-
-        # install a flow to avoid packet_in next time
-        if out_port != ofproto.OFPP_FLOOD:
-            match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
-            # verify if we have a valid buffer_id, if yes avoid to send both
-            # flow_mod & packet_out
-            if msg.buffer_id != ofproto.OFP_NO_BUFFER:
-                self.add_flow(datapath, 1, match, actions, msg.buffer_id)
-                return
-            else:
-                self.add_flow(datapath, 1, match, actions)
-        data = None
         
-        if msg.buffer_id == ofproto.OFP_NO_BUFFER:
-            data = msg.data
+        srcSwitch = [switch for switch in switches if switch.dp.id == srcNode.port.dpid][0]
+        dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
+        parentVec = {}
+        foundIt = self.BFS (numNodes, srcSwitch, dstSwitch,
+                                       links, switches, hosts, parentVec)
+        
+        sdnNix = []
+        nixVector = []
+        if foundIt:
+            self.BuildNixVector (parentVec, srcSwitch, dstSwitch, links, switches, hosts, nixVector, sdnNix)
 
-        out = parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id,
-                                  in_port=in_port, actions=actions, data=data)
-        datapath.send_msg(out)
+        # Need to send to last switch to send out host port
+        self.sendNixRules (srcSwitch, dstSwitch, dstNode.port.port_no, msg)
+        
+        for curNix in sdnNix:
+            self.sendNixRules (srcSwitch, curNix[0], curNix[1], msg)
+           
+        # The rest of this function is L2 learning. Need to delete once NIx is working
+#         if dst in self.mac_to_port[dpid]:
+#             out_port = self.mac_to_port[dpid][dst]
+#         else:
+#             out_port = ofproto.OFPP_FLOOD
+# 
+#         actions = [parser.OFPActionOutput(out_port)]
+# 
+#         # install a flow to avoid packet_in next time
+#         if out_port != ofproto.OFPP_FLOOD:
+#             match = parser.OFPMatch(in_port=in_port, eth_dst=dst)
+#             # verify if we have a valid buffer_id, if yes avoid to send both
+#             # flow_mod & packet_out
+#             if msg.buffer_id != ofproto.OFP_NO_BUFFER:
+#                 self.add_flow(datapath, 1, match, actions, msg.buffer_id)
+#                 return
+#             else:
+#                 self.add_flow(datapath, 1, match, actions)
+#         data = None
+#         
+#         if msg.buffer_id == ofproto.OFP_NO_BUFFER:
+#             data = msg.data
+# 
+#         out = parser.OFPPacketOut(datapath=datapath, buffer_id=msg.buffer_id,
+#                                   in_port=in_port, actions=actions, data=data)
+#         datapath.send_msg(out)
         
     def ArpProxy (self, data, datapath, in_port, links, switches, hosts):
         for switch in switches:
@@ -197,22 +209,84 @@ class SimpleSwitch13(app_manager.RyuApp):
                                               in_port=switch.dp.ofproto.OFPP_CONTROLLER,
                                               actions=actions, data=data)
                     
-                    self.logger.info("Sending ARP Request: dpid=%s, port=%s", switch.dp.id, port)
+                    self.logger.info("%s: Sending ARP Request: dpid=%s, port=%s", time.time(), switch.dp.id, port)
                     switch.dp.send_msg(out)
         
-    def BFS (self, nNodes, srcNode, dstNode, links, switches, hosts):
-        self.logger.info("BFS: %s %s %s", nNodes, srcNode, dstNode)
-        greyNodeList = [(switch, srcNode.port) for switch in switches if switch.dp.id == srcNode.port.dpid]
-        dstCombo = [(switch, dstNode.port) for switch in switches if switch.dp.id == dstNode.port.dpid][0]
+    def BFS (self, nNodes, srcSwitch, dstSwitch, links, switches, hosts, parentVector):
+        greyNodeList = [ srcSwitch ]
         
-        # Make sure we only start and end with one switch (in case a host is
-        # available from multiple switches)
-        while len(greyNodeList) > 1:
-            del(greyNodeList[-1])
+        parentVector[srcSwitch.dp.id] = greyNodeList[0]
+        while len(greyNodeList) != 0:
+            currNode = greyNodeList[0]
+            if (currNode == dstSwitch):
+                return True
+              
+            for link in links:
+                if link.src.dpid == currNode.dp.id:
+                    if not link.dst.is_live():
+                        continue
+                
+                    if parentVector.get(link.dst.dpid) == None:
+                        parentVector[link.dst.dpid] = currNode
+                        currSwitch = [switch for switch in switches if switch.dp.id == link.dst.dpid][0]
+                        greyNodeList.append(currSwitch)
+            del(greyNodeList[0])
+                         
+        return False
+    
+    def BuildNixVector (self, parentVector, srcSwitch, dstSwitch, links, switches, hosts, nixVector, sdnNix):
+        if srcSwitch == dstSwitch:
+            return True
         
-        parentVector = greyNodeList
-#         while len(greyNodeList) != 0:
-#              currNode = greyNodeList[0]
-#              if (currNode == dstCombo):
-#                  return True, parentVector            
-        return False, parentVector
+        if parentVector.get(dstSwitch.dp.id) == None:
+            return False
+        
+        parentSwitch = parentVector[dstSwitch.dp.id]
+        destId = 0
+        totalNeighbors = len([host for host in hosts if host.port.dpid == parentSwitch.dp.id])
+        offset = totalNeighbors
+        for link in links:
+            if link.src.dpid == parentSwitch.dp.id:
+                remoteSwitch = [switch for switch in switches if link.dst.dpid == switch.dp.id][0]
+                 
+                if remoteSwitch == dstSwitch:
+                    sdnNix.append((parentSwitch, link.src.port_no))
+                    destId = totalNeighbors + offset
+                offset += 1
+                totalNeighbors += 1
+                
+        if totalNeighbors > 1:
+            newNix = [int(c) for c in self.bin(destId)[2:]]
+            nixVector.extend(newNix)
+        #self.logger.info("SDN Nix: %s", sdnNix)
+        return self.BuildNixVector(parentVector, srcSwitch, parentSwitch, links, switches, hosts, nixVector, sdnNix)
+    
+    def sendNixRules (self, srcSwitch, switch, port_no, msg):
+        ofproto = switch.dp.ofproto
+        parser = switch.dp.ofproto_parser
+
+        actions = [switch.dp.ofproto_parser.OFPActionOutput(port_no)]
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
+                                             actions)]
+        
+        match = parser.OFPMatch(eth_src=msg.match['eth_src'],
+                                eth_dst=msg.match['eth_dst'])
+        mod = parser.OFPFlowMod(datapath=switch.dp, priority=1,
+                                match=match, instructions=inst)
+        switch.dp.send_msg(mod)
+                    
+        self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
+        
+        if srcSwitch == switch:
+            data = None
+        
+            if msg.buffer_id == ofproto.OFP_NO_BUFFER:
+                data = msg.data
+
+            out = parser.OFPPacketOut(datapath=srcSwitch.dp, buffer_id=msg.buffer_id,
+                                      in_port=switch.dp.ofproto.OFPP_CONTROLLER,
+                                      actions=actions, data=data)
+            srcSwitch.dp.send_msg(out)
+    
+    def bin(self, s):
+        return str(s) if s<=1 else bin(s>>1) + str(s&1)
