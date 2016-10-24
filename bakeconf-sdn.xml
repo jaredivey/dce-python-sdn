@@ -195,7 +195,7 @@
 
     <module name="iperf">
       <source type="archive">
-        <attribute name="url" value="http://iperf.fr/download/iperf_2.0.5/iperf-2.0.5-source.tar.gz"/>
+        <attribute name="url" value="http://iperf.fr/download/source/iperf-2.0.5-source.tar.gz"/>
         <attribute name="extract_directory" value="iperf-2.0.5"/>
       </source>
       <build type="make" objdir="yes">
