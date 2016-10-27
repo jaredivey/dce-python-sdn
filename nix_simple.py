@@ -110,10 +110,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         arp_pkt = None
         if eth.ethertype == ether_types.ETH_TYPE_ARP:
             arp_pkt = pkt.get_protocols(arp.arp)[0]
-            if arp_pkt.opcode == arp.ARP_REQUEST:
-                # learn a mac address to avoid FLOOD next time.
-                self.mac_to_port[dpid][src] = in_port
-                
+            if arp_pkt.opcode == arp.ARP_REQUEST:                
                 # Send to ARP proxy. Cannot perform NIx routing until both hosts
                 # are known by the controller
                 self.ArpProxy (msg.data, datapath, in_port, links, switches, hosts)
