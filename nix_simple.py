@@ -115,6 +115,9 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                 # are known by the controller
                 self.ArpProxy (msg.data, datapath, in_port, links, switches, hosts)
                 return
+            elif arp_pkt.opcode == arp.ARP_REPLY:
+                self.ArpReply (msg.data, datapath, arp_pkt.dst_ip, links, switches, hosts)
+                return
         
         self.logger.info("%s: packet in %s %s %s %s", time.time(), dpid, src, dst, in_port)
         
@@ -150,7 +153,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
             self.BuildNixVector (parentVec, srcSwitch, dstSwitch, links, switches, hosts, nixVector, sdnNix)
 
         # Need to send to last switch to send out host port
-        self.sendNixRules (srcSwitch, dstSwitch, dstNode.port.port_no, msg)
+        sdnNix.insert(0, (dstSwitch, dstNode.port.port_no))
         
         for curNix in sdnNix:
             self.sendNixRules (srcSwitch, curNix[0], curNix[1], msg)
@@ -175,6 +178,20 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                                               actions=actions, data=data)
                     
                     self.logger.info("%s: Sending ARP Request: dpid=%s, port=%s", time.time(), switch.dp.id, port)
+                    switch.dp.send_msg(out)
+
+    def ArpReply (self, data, datapath, dst_ip, links, switches, hosts):
+        for host in hosts:
+            for switch in switches:
+                # Push an ARP reply out of the appropriate switch port
+                if host.port.dpid == switch.dp.id and host.ipv4.count(dst_ip):
+                    actions = [switch.dp.ofproto_parser.OFPActionOutput(host.port.port_no)]
+                    out = switch.dp.ofproto_parser.OFPPacketOut(datapath=switch.dp,
+                                              buffer_id=switch.dp.ofproto.OFP_NO_BUFFER,
+                                              in_port=switch.dp.ofproto.OFPP_CONTROLLER,
+                                              actions=actions, data=data)
+
+                    self.logger.info("%s: Sending ARP Reply: dpid=%s, ip=%s, port=%s", time.time(), switch.dp.id, dst_ip, host.port.port_no)
                     switch.dp.send_msg(out)
         
     def BFS (self, nNodes, srcSwitch, dstSwitch, links, switches, hosts, parentVector):
