@@ -1,14 +1,14 @@
 diff -r 4465c6f86068 helper/ofswitch13-helper.cc
 --- a/helper/ofswitch13-helper.cc	Mon Apr 11 19:07:47 2016 -0300
-+++ b/helper/ofswitch13-helper.cc	Wed Oct 05 15:51:01 2016 -0400
-@@ -343,17 +343,21 @@
++++ b/helper/ofswitch13-helper.cc	Thu Nov 17 14:24:07 2016 -0500
+@@ -343,17 +344,25 @@
  OFSwitch13Helper::InstallExternalController (Ptr<Node> cNode)
  {
    NS_LOG_FUNCTION (this << cNode);
 -  NS_ASSERT_MSG (m_channelType == OFSwitch13Helper::SINGLECSMA,
 -                 "External controller must use SINGLECSMA openflow channel");
-+  //NS_ASSERT_MSG (m_channelType == OFSwitch13Helper::SINGLECSMA,
-+  //               "External controller must use SINGLECSMA openflow channel");
++//  NS_ASSERT_MSG (m_channelType == OFSwitch13Helper::SINGLECSMA,
++//                 "External controller must use SINGLECSMA openflow channel");
  
    // Connecting the controller node (TapBridge) to common csma network
    m_ctrlNode = cNode;
@@ -16,16 +16,129 @@ diff -r 4465c6f86068 helper/ofswitch13-helper.cc
 -  m_ctrlDevs.Add (m_csmaHelper.Install (m_ctrlNode, m_csmaChannel));
 -  Ipv4InterfaceContainer ctrlIface = m_ipv4helper.Assign (m_ctrlDevs);
 -  m_ctrlAddr = InetSocketAddress (ctrlIface.GetAddress (0), m_ctrlPort);
-+  if (m_channelType == OFSwitch13Helper::SINGLECSMA)
-+  {
-+	  m_ctrlDevs.Add (m_csmaHelper.Install (m_ctrlNode, m_csmaChannel));
-+	  Ipv4InterfaceContainer ctrlIface = m_ipv4helper.Assign (m_ctrlDevs);
-+	  m_ctrlAddr = InetSocketAddress (ctrlIface.GetAddress (0), m_ctrlPort);
- 
+-
 -  return m_ctrlDevs.Get (0);
-+	  return m_ctrlDevs.Get (0);
-+  }
-+  return 0;
++//  m_ctrlDevs.Add (m_csmaHelper.Install (m_ctrlNode, m_csmaChannel));
++//  Ipv4InterfaceContainer ctrlIface = m_ipv4helper.Assign (m_ctrlDevs);
++//  m_ctrlAddr = InetSocketAddress (ctrlIface.GetAddress (0), m_ctrlPort);
++  if (m_channelType == OFSwitch13Helper::SINGLECSMA)
++   {
++ 	  m_ctrlDevs.Add (m_csmaHelper.Install (m_ctrlNode, m_csmaChannel));
++ 	  Ipv4InterfaceContainer ctrlIface = m_ipv4helper.Assign (m_ctrlDevs);
++ 	  m_ctrlAddr = InetSocketAddress (ctrlIface.GetAddress (0), m_ctrlPort);
++ 
++  //return m_ctrlDevs.Get (0);
++        return m_ctrlDevs.Get (0);
++        }
++        return 0;
  }
  
  void
+diff -r 4465c6f86068 model/ofswitch13-device.cc
+--- a/model/ofswitch13-device.cc	Mon Apr 11 19:07:47 2016 -0300
++++ b/model/ofswitch13-device.cc	Thu Nov 17 14:24:07 2016 -0500
+@@ -99,6 +99,8 @@
+   m_ctrlSocket = 0;
+   m_ctrlAddr = Address ();
+   m_datapath = DatapathNew ();
++  pendingPacketforContrRcv = 0;
++  pendingBytesforContrRcv = 0;
+   OFSwitch13Device::RegisterDatapath (m_dpId, Ptr<OFSwitch13Device> (this));
+   Simulator::Schedule (m_timeout, &OFSwitch13Device::DatapathTimeout, this,
+                        m_datapath);
+@@ -619,13 +620,10 @@
+ {
+   NS_LOG_FUNCTION (this << socket);
+ 
+-  static Ptr<Packet> pendingPacket = 0;
+-  static uint32_t pendingBytes = 0;
+-  static Address from;
+ 
+   do
+     {
+-      if (!pendingBytes)
++      if (!pendingBytesforContrRcv)
+         {
+           // Starting with a new OpenFlow message.
+           // At least 8 bytes (OpenFlow header) must be available.
+@@ -637,29 +635,31 @@
+ 
+           // Receive the OpenFlow header and get the OpenFlow message size
+           ofp_header header;
+-          pendingPacket = socket->RecvFrom (sizeof (ofp_header), 0, from);
+-          pendingPacket->CopyData ((uint8_t*)&header, sizeof (ofp_header));
+-          pendingBytes = ntohs (header.length) - sizeof (ofp_header);
++          pendingPacketforContrRcv = socket->RecvFrom (sizeof (ofp_header), 0, fromforContrRcv);
++          pendingPacketforContrRcv->CopyData ((uint8_t*)&header, sizeof (ofp_header));
++          pendingBytesforContrRcv = ntohs (header.length) - sizeof (ofp_header);
+         }
+ 
++
+       // Receive the remaining OpenFlow message
+-      if (pendingBytes)
++      if (pendingBytesforContrRcv)
+         {
+-          if (socket->GetRxAvailable () < pendingBytes)
++          if (socket->GetRxAvailable () < pendingBytesforContrRcv)
+             {
+               // We need to wait for more bytes
+               return;
+             }
+-          pendingPacket->AddAtEnd (socket->Recv (pendingBytes, 0));
++          pendingPacketforContrRcv->AddAtEnd (socket->Recv (pendingBytesforContrRcv, 0));
++
+         }
+ 
+-      if (InetSocketAddress::IsMatchingType (from))
++      if (InetSocketAddress::IsMatchingType (fromforContrRcv))
+         {
+-          Ipv4Address ipv4 = InetSocketAddress::ConvertFrom (from).GetIpv4 ();
+-          uint16_t port = InetSocketAddress::ConvertFrom (from).GetPort ();
++          Ipv4Address ipv4 = InetSocketAddress::ConvertFrom (fromforContrRcv).GetIpv4 ();
++          uint16_t port = InetSocketAddress::ConvertFrom (fromforContrRcv).GetPort ();
+           NS_LOG_LOGIC ("At time " << Simulator::Now ().GetSeconds () <<
+                         "s the OpenFlow switch " << GetDatapathId () <<
+-                        " received " << pendingPacket->GetSize () <<
++                        " received " << pendingPacketforContrRcv->GetSize () <<
+                         " bytes from controller " << ipv4 <<
+                         " socket " << socket <<
+                         " port " << port);
+@@ -676,10 +676,11 @@
+           ctrl.conn_id = 0; // FIXME No support for auxiliary connections.
+ 
+           // Get the OpenFlow buffer, unpack the message and send to handler
+-          ofpbuf *buffer = ofs::BufferFromPacket (pendingPacket,
+-                                                  pendingPacket->GetSize ());
++          ofpbuf *buffer = ofs::BufferFromPacket (pendingPacketforContrRcv,
++        		  pendingPacketforContrRcv->GetSize ());
+           error = ofl_msg_unpack ((uint8_t*)buffer->data, buffer->size, &msg,
+                                   &ctrl.xid, m_datapath->exp);
++
+           if (!error)
+             {
+               char *msg_str = ofl_msg_to_string (msg, m_datapath->exp);
+@@ -711,8 +712,8 @@
+             }
+           ofpbuf_delete (buffer);
+         }
+-      pendingPacket = 0;
+-      pendingBytes = 0;
++      pendingPacketforContrRcv = 0;
++      pendingBytesforContrRcv = 0;
+ 
+       // Repeat until socket buffer gets empty
+     }
+diff -r 4465c6f86068 model/ofswitch13-device.h
+--- a/model/ofswitch13-device.h	Mon Apr 11 19:07:47 2016 -0300
++++ b/model/ofswitch13-device.h	Thu Nov 17 14:24:07 2016 -0500
+@@ -457,6 +457,10 @@
+   static uint64_t m_globalDpId;   //!< Global counter for datapath IDs
+   static uint64_t m_globalPktId;  //!< Global counter for packets IDs
+ 
++  Ptr<Packet> pendingPacketforContrRcv;
++  uint32_t pendingBytesforContrRcv;
++  Address fromforContrRcv;
++
+   /**
+    * As the integration of ofsoftswitch13 and ns-3 involve overriding some C
+    * functions, we are using a global map to store a pointer to all
