@@ -1,7 +1,15 @@
 diff -r 4465c6f86068 helper/ofswitch13-helper.cc
 --- a/helper/ofswitch13-helper.cc	Mon Apr 11 19:07:47 2016 -0300
-+++ b/helper/ofswitch13-helper.cc	Fri Nov 18 10:41:45 2016 -0500
-@@ -343,17 +344,25 @@
++++ b/helper/ofswitch13-helper.cc	Fri Nov 18 11:32:29 2016 -0500
+@@ -115,6 +115,7 @@
+       {
+         // We use a /30 subnet which can hold exactly two addresses.
+         SetAddressBase ("10.100.150.0", "255.255.255.252");
++        m_p2pHelper.SetChannelAttribute("Delay", StringValue ("1ms"));
+         break;
+       }
+     default:
+@@ -343,17 +345,25 @@
  OFSwitch13Helper::InstallExternalController (Ptr<Node> cNode)
  {
    NS_LOG_FUNCTION (this << cNode);
@@ -36,7 +44,7 @@ diff -r 4465c6f86068 helper/ofswitch13-helper.cc
  void
 diff -r 4465c6f86068 model/ofswitch13-device.cc
 --- a/model/ofswitch13-device.cc	Mon Apr 11 19:07:47 2016 -0300
-+++ b/model/ofswitch13-device.cc	Fri Nov 18 10:41:45 2016 -0500
++++ b/model/ofswitch13-device.cc	Fri Nov 18 11:32:29 2016 -0500
 @@ -99,6 +99,8 @@
    m_ctrlSocket = 0;
    m_ctrlAddr = Address ();
@@ -149,7 +157,7 @@ diff -r 4465c6f86068 model/ofswitch13-device.cc
  void
 diff -r 4465c6f86068 model/ofswitch13-device.h
 --- a/model/ofswitch13-device.h	Mon Apr 11 19:07:47 2016 -0300
-+++ b/model/ofswitch13-device.h	Fri Nov 18 10:41:45 2016 -0500
++++ b/model/ofswitch13-device.h	Fri Nov 18 11:32:29 2016 -0500
 @@ -457,6 +457,10 @@
    static uint64_t m_globalDpId;   //!< Global counter for datapath IDs
    static uint64_t m_globalPktId;  //!< Global counter for packets IDs
