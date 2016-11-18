@@ -1,6 +1,6 @@
 diff -r 4465c6f86068 helper/ofswitch13-helper.cc
 --- a/helper/ofswitch13-helper.cc	Mon Apr 11 19:07:47 2016 -0300
-+++ b/helper/ofswitch13-helper.cc	Thu Nov 17 14:24:07 2016 -0500
++++ b/helper/ofswitch13-helper.cc	Fri Nov 18 10:41:45 2016 -0500
 @@ -343,17 +344,25 @@
  OFSwitch13Helper::InstallExternalController (Ptr<Node> cNode)
  {
@@ -36,7 +36,7 @@ diff -r 4465c6f86068 helper/ofswitch13-helper.cc
  void
 diff -r 4465c6f86068 model/ofswitch13-device.cc
 --- a/model/ofswitch13-device.cc	Mon Apr 11 19:07:47 2016 -0300
-+++ b/model/ofswitch13-device.cc	Thu Nov 17 14:24:07 2016 -0500
++++ b/model/ofswitch13-device.cc	Fri Nov 18 10:41:45 2016 -0500
 @@ -99,6 +99,8 @@
    m_ctrlSocket = 0;
    m_ctrlAddr = Address ();
@@ -46,6 +46,14 @@ diff -r 4465c6f86068 model/ofswitch13-device.cc
    OFSwitch13Device::RegisterDatapath (m_dpId, Ptr<OFSwitch13Device> (this));
    Simulator::Schedule (m_timeout, &OFSwitch13Device::DatapathTimeout, this,
                         m_datapath);
+@@ -477,7 +479,6 @@
+ OFSwitch13Device::DatapathTimeout (datapath* dp)
+ {
+   NS_LOG_FUNCTION (this);
+-
+   meter_table_add_tokens (dp->meters);
+   pipeline_timeout (dp->pipeline);
+ 
 @@ -619,13 +620,10 @@
  {
    NS_LOG_FUNCTION (this << socket);
@@ -128,9 +136,20 @@ diff -r 4465c6f86068 model/ofswitch13-device.cc
  
        // Repeat until socket buffer gets empty
      }
+@@ -828,8 +829,8 @@
+   // Scheduling the buffer remove for expired packet. Since packet timeout
+   // resolution is expressed in seconds, let's double it to avoid rounding
+   // conflicts.
+-  Simulator::Schedule (Time::FromInteger (2 * timeout, Time::S),
+-                       &OFSwitch13Device::BufferPacketDelete, this, packetId);
++//  Simulator::Schedule (Time::FromInteger (2 * timeout, Time::S),
++//                       &OFSwitch13Device::BufferPacketDelete, this, packetId);
+ }
+ 
+ void
 diff -r 4465c6f86068 model/ofswitch13-device.h
 --- a/model/ofswitch13-device.h	Mon Apr 11 19:07:47 2016 -0300
-+++ b/model/ofswitch13-device.h	Thu Nov 17 14:24:07 2016 -0500
++++ b/model/ofswitch13-device.h	Fri Nov 18 10:41:45 2016 -0500
 @@ -457,6 +457,10 @@
    static uint64_t m_globalDpId;   //!< Global counter for datapath IDs
    static uint64_t m_globalPktId;  //!< Global counter for packets IDs
