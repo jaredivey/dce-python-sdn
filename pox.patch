@@ -1,8 +1,8 @@
 diff --git a/pox/core.py b/pox/core.py
-index 69427d1..97d47f9 100644
+index b41133d..8bade69 100644
 --- a/pox/core.py
 +++ b/pox/core.py
-@@ -259,14 +259,14 @@ class POXCore (EventMixin):
+@@ -271,14 +271,14 @@ class POXCore (EventMixin):
      """
      Shut down POX.
      """
@@ -25,3 +25,16 @@ index 69427d1..97d47f9 100644
  
    def _quit (self):
      # Should probably do locking here
+diff --git a/pox/openflow/of_01.py b/pox/openflow/of_01.py
+index 6572b4c..04895e1 100644
+--- a/pox/openflow/of_01.py
++++ b/pox/openflow/of_01.py
+@@ -352,7 +352,7 @@ class HandshakeOpenFlowHandlers (OpenFlowHandlers):
+     con.send(self._barrier)
+ 
+     # To support old versions of cbench, just finish connecting here.
+-    #self._finish_connecting(con)
++    self._finish_connecting(con)
+ 
+   def _finish_connecting (self, con):
+     con.ofnexus._connect(con)
