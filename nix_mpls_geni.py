@@ -36,11 +36,11 @@ import ryu.topology.api as api
 
 import time
 
-class NixSimpleSwitch13(app_manager.RyuApp):
+class NixMpls13(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
 
     def __init__(self, *args, **kwargs):
-        super(NixSimpleSwitch13, self).__init__(*args, **kwargs)
+        super(NixMpls13, self).__init__(*args, **kwargs)
         self.logger.info("%s: Starting app", time.time())
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
@@ -61,7 +61,24 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                                           ofproto.OFPCML_NO_BUFFER)]
         self.add_flow(datapath, 0, match, actions)
 
-    def add_flow(self, datapath, priority, match, actions, buffer_id=None):
+    @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, CONFIG_DISPATCHER)
+    def port_desc_handler(self, ev):
+        datapath = ev.msg.datapath
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+
+        for port in datapath.ports:
+            if port != ofproto.OFPP_LOCAL:
+                    self.logger.info("%s has port %s", datapath, port)
+                    mpls_match = parser.OFPMatch()
+                    mpls_match.append_field(ofproto.OXM_OF_ETH_TYPE, ether_types.ETH_TYPE_MPLS)
+                    mpls_match.append_field(ofproto.OXM_OF_MPLS_LABEL, port)
+                    mpls_actions = [parser.OFPActionPopMpls(),
+                                    parser.OFPActionOutput(port)]
+                    self.add_flow(datapath, 10, mpls_match, mpls_actions)
+                    time.sleep(0.01)
+
+    def add_flow(self, datapath, priority, match, actions, table_id=0, buffer_id=None):
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
@@ -70,10 +87,34 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         if buffer_id:
             mod = parser.OFPFlowMod(datapath=datapath, buffer_id=buffer_id,
                                     priority=priority, match=match,
+                                    table_id=table_id,
                                     instructions=inst)
         else:
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
+                                    table_id=table_id,
                                     match=match, instructions=inst)
+        self.logger.info("Sending new flow to add: %s", mod)
+        datapath.send_msg(mod)
+
+    def mod_flow(self, datapath, priority, match, actions, table_id=0, buffer_id=None):
+        ofproto = datapath.ofproto
+        parser = datapath.ofproto_parser
+
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
+                                             actions)]
+        if buffer_id:
+            mod = parser.OFPFlowMod(datapath=datapath, buffer_id=buffer_id,
+                                    priority=priority, match=match,
+                                    command=ofproto.OFPFC_MODIFY,
+                                    table_id=table_id,
+                                    instructions=inst)
+        else:
+            mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
+                                    match=match, 
+                                    command=ofproto.OFPFC_MODIFY,
+                                    table_id=table_id,
+                                    instructions=inst)
+        self.logger.info("Sending new flow to mod: %s", mod)
         datapath.send_msg(mod)
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
@@ -110,7 +151,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         arp_pkt = None
         if eth.ethertype == ether_types.ETH_TYPE_ARP:
             arp_pkt = pkt.get_protocols(arp.arp)[0]
-            if arp_pkt.opcode == arp.ARP_REQUEST:                
+            if arp_pkt.opcode == arp.ARP_REQUEST:
                 # Send to ARP proxy. Cannot perform NIx routing until both hosts
                 # are known by the controller
                 self.ArpProxy (msg.data, datapath, in_port, links, switches, hosts)
@@ -119,7 +160,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                 self.ArpReply (msg.data, datapath, arp_pkt.dst_ip, links, switches, hosts)
                 return
         
-        self.logger.info("%s: packet in %s %s %s %s", time.time(), dpid, src, dst, in_port)
+        self.logger.info("%s: packet in %s %s %s %s %s", time.time(), dpid, src, dst, in_port, eth.ethertype)
         
         # Start nix vector code        
         numNodes = len(switches) + len(hosts)
@@ -151,12 +192,11 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         nixVector = []
         if foundIt:
             self.BuildNixVector (parentVec, srcSwitch, dstSwitch, links, switches, hosts, nixVector, sdnNix)
+            
+            sdnNix.insert(0, (dstSwitch, dstNode.port.port_no))
+            self.sendNixPacket (ofproto, parser, srcSwitch, sdnNix, eth, msg)
 
-        # Need to send to last switch to send out host port
-        sdnNix.insert(0, (dstSwitch, dstNode.port.port_no))
-        
-        for curNix in sdnNix:
-            self.sendNixRules (srcSwitch, curNix[0], curNix[1], eth, msg)
+            #self.modLastHop (ofproto, parser, dstSwitch, dstNode.port.port_no, eth, msg)
         
     def ArpProxy (self, data, datapath, in_port, links, switches, hosts):
         for switch in switches:
@@ -191,7 +231,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                                               in_port=switch.dp.ofproto.OFPP_CONTROLLER,
                                               actions=actions, data=data)
 
-                    self.logger.info("%s: Sending ARP Reply: dpid=%s, ip=%s, port=%s", time.time(), switch.dp.id, dst_ip, host.port.port_no)
+                    self.logger.info("%s: Sending ARP Reply: dpid=%s, port=%s", time.time(), switch.dp.id, host.port.port_no)
                     switch.dp.send_msg(out)
         
     def BFS (self, nNodes, srcSwitch, dstSwitch, links, switches, hosts, parentVector):
@@ -240,35 +280,62 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         if totalNeighbors > 1:
             newNix = [int(c) for c in self.bin(destId)[2:]]
             nixVector.extend(newNix)
-        #self.logger.info("SDN Nix: %s", sdnNix)
+        self.logger.info("SDN Nix: %s", sdnNix)
         return self.BuildNixVector(parentVector, srcSwitch, parentSwitch, links, switches, hosts, nixVector, sdnNix)
     
-    def sendNixRules (self, srcSwitch, switch, port_no, eth, msg):
-        ofproto = switch.dp.ofproto
-        parser = switch.dp.ofproto_parser
-
-        actions = [switch.dp.ofproto_parser.OFPActionOutput(port_no)]
-        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
-                                             actions)]
+    def modLastHop (self, ofproto, parser, switch, port_no, eth, msg):
+        mpls_match = parser.OFPMatch()
+        mpls_match.append_field(ofproto.OXM_OF_ETH_TYPE, ether_types.ETH_TYPE_MPLS)
+        mpls_match.append_field(ofproto.OXM_OF_MPLS_LABEL, port_no)
+        mpls_actions = [parser.OFPActionPopMpls(),
+                        parser.OFPActionOutput(port_no)]
         
-        match = parser.OFPMatch(eth_src=eth.src,
-                                eth_dst=eth.dst)
-        mod = parser.OFPFlowMod(datapath=switch.dp, priority=1,
-                                match=match, instructions=inst)
-        switch.dp.send_msg(mod)
-                    
+        self.mod_flow(switch.dp, 10, mpls_match, mpls_actions)                    
         self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
-        
-        if srcSwitch == switch:
-            data = None
-        
-            if msg.buffer_id == ofproto.OFP_NO_BUFFER:
-                data = msg.data
 
-            out = parser.OFPPacketOut(datapath=srcSwitch.dp, buffer_id=msg.buffer_id,
-                                      in_port=switch.dp.ofproto.OFPP_CONTROLLER,
-                                      actions=actions, data=data)
-            srcSwitch.dp.send_msg(out)
-    
+    def sendNixPacket(self, ofproto, parser, srcSwitch, sdnNix, eth, msg):
+        # Only set up rule to change eth_type if this will not be a single hop
+        #ps_actions = [parser.OFPActionSetField(eth_type=ether_types.ETH_TYPE_MPLS)]
+        #if len(sdnNix) > 0:
+        #    ps_inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, ps_actions),
+        #               parser.OFPInstructionGotoTable(table_id=1)]
+        #    ps_match = parser.OFPMatch(eth_type=ether_types.ETH_TYPE_IP,
+        #                               eth_src=eth.src,
+        #                               eth_dst=eth.dst)
+        #    ps_mod = parser.OFPFlowMod(datapath=srcSwitch.dp, priority=20,
+        #                               match=ps_match, instructions=ps_inst)
+        #    srcSwitch.dp.send_msg(ps_mod)
+            
+        actions = []
+        out_port = 0        
+        for curNix in sdnNix:
+            if curNix[0] == srcSwitch:
+                # Save the output port from the source switch
+                out_port = curNix[1]
+            else:
+                self.logger.info ("Switch %s send out port %s", curNix[0].dp.id, curNix[1])
+                actions.append(parser.OFPActionPushMpls())
+                actions.append(parser.OFPActionSetMplsTtl(7))
+                actions.append(parser.OFPActionSetField(mpls_label=curNix[1]))
+        actions.append(parser.OFPActionOutput(out_port))
+
+        inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
+        match = parser.OFPMatch(eth_src=eth.src,eth_dst=eth.dst)
+        mod = parser.OFPFlowMod(datapath=srcSwitch.dp, priority=10, table_id=0,
+                                match=match, instructions=inst)
+        self.logger.info("Sending new flow to add: %s", mod)
+        srcSwitch.dp.send_msg(mod)
+        
+        data = None
+        if msg.buffer_id == ofproto.OFP_NO_BUFFER:
+            data = msg.data
+
+        #if len(sdnNix) > 1:
+        #    actions.insert(0, ps_actions[0])
+        out = parser.OFPPacketOut(datapath=srcSwitch.dp, buffer_id=msg.buffer_id,
+                                  in_port=msg.match['in_port'],
+                                  actions=actions, data=data)
+        srcSwitch.dp.send_msg(out)
+        
     def bin(self, s):
         return str(s) if s<=1 else bin(s>>1) + str(s&1)
