@@ -29,12 +29,15 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
+from ryu.lib import mac
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet, arp, ipv4
 from ryu.lib.packet import ether_types
 import ryu.topology.api as api
 
 import time
+
+UINT64_MAX = (1 << 64) - 1
 
 class NixMpls13(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -295,33 +298,40 @@ class NixMpls13(app_manager.RyuApp):
 
     def sendNixPacket(self, ofproto, parser, srcSwitch, sdnNix, eth, msg):
         # Only set up rule to change eth_type if this will not be a single hop
-        #ps_actions = [parser.OFPActionSetField(eth_type=ether_types.ETH_TYPE_MPLS)]
-        #if len(sdnNix) > 0:
-        #    ps_inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, ps_actions),
-        #               parser.OFPInstructionGotoTable(table_id=1)]
-        #    ps_match = parser.OFPMatch(eth_type=ether_types.ETH_TYPE_IP,
-        #                               eth_src=eth.src,
-        #                               eth_dst=eth.dst)
-        #    ps_mod = parser.OFPFlowMod(datapath=srcSwitch.dp, priority=20,
-        #                               match=ps_match, instructions=ps_inst)
-        #    srcSwitch.dp.send_msg(ps_mod)
+        ps_actions = [parser.OFPActionPushMpls()]
+        if len(sdnNix) > 0:
+            ps_inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, ps_actions),
+                       parser.OFPInstructionWriteMetadata(mac.haddr_to_int(eth.dst), UINT64_MAX),
+                       parser.OFPInstructionGotoTable(table_id=1)]
+            ps_match = parser.OFPMatch(eth_type=ether_types.ETH_TYPE_IP,
+                                       eth_src=eth.src,
+                                       eth_dst=eth.dst)
+            ps_mod = parser.OFPFlowMod(datapath=srcSwitch.dp, priority=20,
+                                       match=ps_match, instructions=ps_inst)
+            srcSwitch.dp.send_msg(ps_mod)
             
         actions = []
-        out_port = 0        
+        out_port = 0
+        first = 1        
         for curNix in sdnNix:
             if curNix[0] == srcSwitch:
                 # Save the output port from the source switch
                 out_port = curNix[1]
             else:
                 self.logger.info ("Switch %s send out port %s", curNix[0].dp.id, curNix[1])
-                actions.append(parser.OFPActionPushMpls())
+                # Only set fields since we added the MPLS header on the first instruction
+                if first != 1:
+                    actions.append(parser.OFPActionPushMpls())
                 actions.append(parser.OFPActionSetMplsTtl(7))
                 actions.append(parser.OFPActionSetField(mpls_label=curNix[1]))
+                first = 0
         actions.append(parser.OFPActionOutput(out_port))
 
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
-        match = parser.OFPMatch(eth_src=eth.src,eth_dst=eth.dst)
-        mod = parser.OFPFlowMod(datapath=srcSwitch.dp, priority=10, table_id=0,
+        match = parser.OFPMatch()
+        match.append_field(ofproto.OXM_OF_ETH_TYPE, ether_types.ETH_TYPE_MPLS)
+        match.append_field(ofproto.OXM_OF_METADATA, mac.haddr_to_int(eth.dst), UINT64_MAX)
+        mod = parser.OFPFlowMod(datapath=srcSwitch.dp, priority=10, table_id=1,
                                 match=match, instructions=inst)
         self.logger.info("Sending new flow to add: %s", mod)
         srcSwitch.dp.send_msg(mod)
@@ -330,8 +340,8 @@ class NixMpls13(app_manager.RyuApp):
         if msg.buffer_id == ofproto.OFP_NO_BUFFER:
             data = msg.data
 
-        #if len(sdnNix) > 1:
-        #    actions.insert(0, ps_actions[0])
+        if len(sdnNix) > 1:
+            actions.insert(0, ps_actions[0])
         out = parser.OFPPacketOut(datapath=srcSwitch.dp, buffer_id=msg.buffer_id,
                                   in_port=msg.match['in_port'],
                                   actions=actions, data=data)
