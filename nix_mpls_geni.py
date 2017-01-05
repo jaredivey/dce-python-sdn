@@ -301,10 +301,9 @@ class NixMpls13(app_manager.RyuApp):
         ps_actions = [parser.OFPActionPushMpls()]
         if len(sdnNix) > 0:
             ps_inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, ps_actions),
-                       parser.OFPInstructionWriteMetadata(mac.haddr_to_int(eth.dst), UINT64_MAX),
+                       #parser.OFPInstructionWriteMetadata(mac.haddr_to_int(eth.dst), UINT64_MAX),
                        parser.OFPInstructionGotoTable(table_id=1)]
-            ps_match = parser.OFPMatch(eth_type=ether_types.ETH_TYPE_IP,
-                                       eth_src=eth.src,
+            ps_match = parser.OFPMatch(eth_src=eth.src,
                                        eth_dst=eth.dst)
             ps_mod = parser.OFPFlowMod(datapath=srcSwitch.dp, priority=20,
                                        match=ps_match, instructions=ps_inst)
@@ -322,7 +321,7 @@ class NixMpls13(app_manager.RyuApp):
                 # Only set fields since we added the MPLS header on the first instruction
                 if first != 1:
                     actions.append(parser.OFPActionPushMpls())
-                actions.append(parser.OFPActionSetMplsTtl(7))
+                actions.append(parser.OFPActionSetField(mpls_ttl=64))
                 actions.append(parser.OFPActionSetField(mpls_label=curNix[1]))
                 first = 0
         actions.append(parser.OFPActionOutput(out_port))
@@ -330,7 +329,9 @@ class NixMpls13(app_manager.RyuApp):
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
         match = parser.OFPMatch()
         match.append_field(ofproto.OXM_OF_ETH_TYPE, ether_types.ETH_TYPE_MPLS)
-        match.append_field(ofproto.OXM_OF_METADATA, mac.haddr_to_int(eth.dst), UINT64_MAX)
+        match.append_field(ofproto.OXM_OF_ETH_SRC, eth.src)
+        match.append_field(ofproto.OXM_OF_ETH_DST, eth.dst)
+        #match.append_field(ofproto.OXM_OF_METADATA, mac.haddr_to_int(eth.dst), UINT64_MAX)
         mod = parser.OFPFlowMod(datapath=srcSwitch.dp, priority=10, table_id=1,
                                 match=match, instructions=inst)
         self.logger.info("Sending new flow to add: %s", mod)
