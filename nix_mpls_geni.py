@@ -29,7 +29,7 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
-from ryu.lib import mac
+from ryu.lib import mac,ip
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet, arp, ipv4
 from ryu.lib.packet import ether_types
@@ -76,9 +76,19 @@ class NixMpls13(app_manager.RyuApp):
                     mpls_match = parser.OFPMatch()
                     mpls_match.append_field(ofproto.OXM_OF_ETH_TYPE, ether_types.ETH_TYPE_MPLS)
                     mpls_match.append_field(ofproto.OXM_OF_MPLS_LABEL, port)
-                    mpls_actions = [parser.OFPActionPopMpls(),
+                    mpls_match.append_field(ofproto.OXM_OF_MPLS_BOS, 0)
+                    mpls_actions = [parser.OFPActionPopMpls(ether_types.ETH_TYPE_MPLS),
                                     parser.OFPActionOutput(port)]
                     self.add_flow(datapath, 10, mpls_match, mpls_actions)
+
+                    mpls_match = parser.OFPMatch()
+                    mpls_match.append_field(ofproto.OXM_OF_ETH_TYPE, ether_types.ETH_TYPE_MPLS)
+                    mpls_match.append_field(ofproto.OXM_OF_MPLS_LABEL, port)
+                    mpls_match.append_field(ofproto.OXM_OF_MPLS_BOS, 1)
+                    mpls_actions = [parser.OFPActionPopMpls(ether_types.ETH_TYPE_IP),
+                                    parser.OFPActionOutput(port)]
+                    self.add_flow(datapath, 10, mpls_match, mpls_actions)
+
                     time.sleep(0.01)
 
     def add_flow(self, datapath, priority, match, actions, table_id=0, buffer_id=None):
@@ -197,9 +207,7 @@ class NixMpls13(app_manager.RyuApp):
             self.BuildNixVector (parentVec, srcSwitch, dstSwitch, links, switches, hosts, nixVector, sdnNix)
             
             sdnNix.insert(0, (dstSwitch, dstNode.port.port_no))
-            self.sendNixPacket (ofproto, parser, srcSwitch, sdnNix, eth, msg)
-
-            #self.modLastHop (ofproto, parser, dstSwitch, dstNode.port.port_no, eth, msg)
+            self.sendNixPacket (ofproto, parser, srcSwitch, sdnNix, msg, src_ip, dst_ip)
         
     def ArpProxy (self, data, datapath, in_port, links, switches, hosts):
         for switch in switches:
@@ -286,29 +294,7 @@ class NixMpls13(app_manager.RyuApp):
         self.logger.info("SDN Nix: %s", sdnNix)
         return self.BuildNixVector(parentVector, srcSwitch, parentSwitch, links, switches, hosts, nixVector, sdnNix)
     
-    def modLastHop (self, ofproto, parser, switch, port_no, eth, msg):
-        mpls_match = parser.OFPMatch()
-        mpls_match.append_field(ofproto.OXM_OF_ETH_TYPE, ether_types.ETH_TYPE_MPLS)
-        mpls_match.append_field(ofproto.OXM_OF_MPLS_LABEL, port_no)
-        mpls_actions = [parser.OFPActionPopMpls(),
-                        parser.OFPActionOutput(port_no)]
-        
-        self.mod_flow(switch.dp, 10, mpls_match, mpls_actions)                    
-        self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
-
-    def sendNixPacket(self, ofproto, parser, srcSwitch, sdnNix, eth, msg):
-        # Only set up rule to change eth_type if this will not be a single hop
-        ps_actions = [parser.OFPActionPushMpls()]
-        if len(sdnNix) > 0:
-            ps_inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, ps_actions),
-                       #parser.OFPInstructionWriteMetadata(mac.haddr_to_int(eth.dst), UINT64_MAX),
-                       parser.OFPInstructionGotoTable(table_id=1)]
-            ps_match = parser.OFPMatch(eth_src=eth.src,
-                                       eth_dst=eth.dst)
-            ps_mod = parser.OFPFlowMod(datapath=srcSwitch.dp, priority=20,
-                                       match=ps_match, instructions=ps_inst)
-            srcSwitch.dp.send_msg(ps_mod)
-            
+    def sendNixPacket(self, ofproto, parser, srcSwitch, sdnNix, msg, src_ip, dst_ip):
         actions = []
         out_port = 0
         first = 1        
@@ -317,22 +303,19 @@ class NixMpls13(app_manager.RyuApp):
                 # Save the output port from the source switch
                 out_port = curNix[1]
             else:
-                self.logger.info ("Switch %s send out port %s", curNix[0].dp.id, curNix[1])
-                # Only set fields since we added the MPLS header on the first instruction
-                if first != 1:
-                    actions.append(parser.OFPActionPushMpls())
+                #self.logger.info ("Switch %s send out port %s", curNix[0].dp.id, curNix[1])
+                actions.append(parser.OFPActionPushMpls())
                 actions.append(parser.OFPActionSetField(mpls_ttl=64))
                 actions.append(parser.OFPActionSetField(mpls_label=curNix[1]))
-                first = 0
         actions.append(parser.OFPActionOutput(out_port))
 
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS, actions)]
         match = parser.OFPMatch()
-        match.append_field(ofproto.OXM_OF_ETH_TYPE, ether_types.ETH_TYPE_MPLS)
-        match.append_field(ofproto.OXM_OF_ETH_SRC, eth.src)
-        match.append_field(ofproto.OXM_OF_ETH_DST, eth.dst)
-        #match.append_field(ofproto.OXM_OF_METADATA, mac.haddr_to_int(eth.dst), UINT64_MAX)
-        mod = parser.OFPFlowMod(datapath=srcSwitch.dp, priority=10, table_id=1,
+        match.append_field(ofproto.OXM_OF_ETH_TYPE, ether_types.ETH_TYPE_IP)
+        # Hack for GENI since it gives the "wrong" MAC addresses... Will still work fine for ns-3
+        match.append_field(ofproto.OXM_OF_IPV4_SRC, ip.ipv4_to_int(src_ip), ip.text_to_int("255.255.0.0"))
+        match.append_field(ofproto.OXM_OF_IPV4_DST, ip.ipv4_to_int(dst_ip), ip.text_to_int("255.255.0.0"))
+        mod = parser.OFPFlowMod(datapath=srcSwitch.dp, priority=10, table_id=0,
                                 match=match, instructions=inst)
         self.logger.info("Sending new flow to add: %s", mod)
         srcSwitch.dp.send_msg(mod)
@@ -341,8 +324,6 @@ class NixMpls13(app_manager.RyuApp):
         if msg.buffer_id == ofproto.OFP_NO_BUFFER:
             data = msg.data
 
-        if len(sdnNix) > 1:
-            actions.insert(0, ps_actions[0])
         out = parser.OFPPacketOut(datapath=srcSwitch.dp, buffer_id=msg.buffer_id,
                                   in_port=msg.match['in_port'],
                                   actions=actions, data=data)
