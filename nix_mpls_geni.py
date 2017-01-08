@@ -35,7 +35,8 @@ from ryu.lib.packet import ethernet, arp, ipv4
 from ryu.lib.packet import ether_types
 import ryu.topology.api as api
 
-import time, heapq
+import os, time, heapq
+from Queue import PriorityQueue
 
 UINT64_MAX = (1 << 64) - 1
 
@@ -252,6 +253,8 @@ class NixMpls13(app_manager.RyuApp):
         while len(greyNodeList) != 0:
             currNode = greyNodeList[0]
             if (currNode == dstSwitch):
+                for key in parentVector:
+                    self.logger.info("%s %s", key, parentVector[key])
                 return True
               
             for link in links:
@@ -268,29 +271,33 @@ class NixMpls13(app_manager.RyuApp):
         return False
 
     def UCS (self, nNodes, srcSwitch, dstSwitch, links, switches, hosts, parentVector):
-        q = [(0, srcSwitch, [])]
-        seen = {}
+        parentVector[srcSwitch.dp.id] = srcSwitch
+        visited = set()
+        q = PriorityQueue()
+        q.put((0, srcSwitch, []))
 
         while q:
-            cost, point, path = heapq.heappop(q)
-            if seen.has_key(point) and seen[point] < cost:
-                continue
+            cost, point, path = q.get()
+            if point not in visited:
+                visited.add(point)
 
-            path = path + [point]
-            if point == dstSwitch:
-                for x in path:
-                    parentVector.append(x)
-                return True
+                path = path + [point]
+                if point == dstSwitch:
+                    for index in range(1,len(path)):
+                        parentVector[path[index].dp.id] = path[index-1]
+                        self.logger.info("%s", path[index-1])
+                    self.logger.info("%s", parentVector)
+                    return True
 
-            for link in links:
-                if link.src.dpid == point.dp.id:
-                    if not link.dst.is_live():
-                        continue
+                for link in links:
+                    if link.src.dpid == point.dp.id:
+                        if not link.dst.is_live():
+                            continue
 
-                    child = [switch for switch in switches if switch.dp.id == link.dst.dpid][0]
-                    if child not in seen:
-                        heapq.heappush(q,(cost+link.delay,child, path))
-            seen[point] = cost
+                        child = [switch for switch in switches if switch.dp.id == link.dst.dpid][0]
+                        if child not in visited:
+                            total_cost = cost + link.delay
+                            q.put((total_cost,child, path))
         return False
     
     def BuildNixVector (self, parentVector, srcSwitch, dstSwitch, links, switches, hosts, nixVector, sdnNix):
