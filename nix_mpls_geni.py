@@ -35,7 +35,7 @@ from ryu.lib.packet import ethernet, arp, ipv4
 from ryu.lib.packet import ether_types
 import ryu.topology.api as api
 
-import time
+import time, heapq
 
 UINT64_MAX = (1 << 64) - 1
 
@@ -265,6 +265,32 @@ class NixMpls13(app_manager.RyuApp):
                         greyNodeList.append(currSwitch)
             del(greyNodeList[0])
                          
+        return False
+
+    def UCS (self, nNodes, srcSwitch, dstSwitch, links, switches, hosts, parentVector):
+        q = [(0, srcSwitch, [])]
+        seen = {}
+
+        while q:
+            cost, point, path = heapq.heappop(q)
+            if seen.has_key(point) and seen[point] < cost:
+                continue
+
+            path = path + [point]
+            if point == dstSwitch:
+                for x in path:
+                    parentVector.append(x)
+                return True
+
+            for link in links:
+                if link.src.dpid == point.dp.id:
+                    if not link.dst.is_live():
+                        continue
+
+                    child = [switch for switch in switches if switch.dp.id == link.dst.dpid][0]
+                    if child not in seen:
+                        heapq.heappush(q,(cost+link.delay,child, path))
+            seen[point] = cost
         return False
     
     def BuildNixVector (self, parentVector, srcSwitch, dstSwitch, links, switches, hosts, nixVector, sdnNix):
