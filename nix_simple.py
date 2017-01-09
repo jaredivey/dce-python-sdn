@@ -125,8 +125,8 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         numNodes = len(switches) + len(hosts)
         src_ip = ''
         dst_ip = ''
-        srcNode = ''
-        dstNode = ''
+        srcNode = None
+        dstNode = None
         if eth.ethertype == ether_types.ETH_TYPE_ARP:
             arp_pkt = pkt.get_protocols(arp.arp)[0]
             src_ip = arp_pkt.src_ip
@@ -140,7 +140,11 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                 srcNode = host
             if dst_ip == host.ipv4[0]:
                 dstNode = host
-        
+
+        if srcNode is None or dstNode is None:
+            self.ArpProxy (msg.data, datapath, in_port, links, switches, hosts)
+            return
+                    
         srcSwitch = [switch for switch in switches if switch.dp.id == srcNode.port.dpid][0]
         dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
         parentVec = {}
