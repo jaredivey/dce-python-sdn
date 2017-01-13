@@ -31,8 +31,8 @@ diff -r 15c95b7d81dc Makefile.pre.in
  		distutils distutils/command distutils/tests $(XMLLIBSUBDIRS) \
  		multiprocessing multiprocessing/dummy \
 +		netaddr netaddr/eui netaddr/ip netaddr/strategy netaddr/tools \
-+		oslo_config routes webob \
-+		repoze repoze/lru \
++		oslo_config routes webob markupsafe mako mako/ext \
++		repoze repoze/lru tinyrpc tinyrpc/dispatch tinyrpc/protocols tinyrpc/server tinyrpc/transports \
  		unittest unittest/test \
  		lib-old \
  		curses pydoc_data $(MACHDEPS)
@@ -127,7 +127,7 @@ diff -r 15c95b7d81dc Modules/Setup.dist
 -#	-L$(SSL)/lib -lssl -lcrypto
 +_ssl _ssl.c \
 +	-DUSE_SSL -I/usr/include -I/usr/include/openssl -I/usr/include/x86_64-linux-gnu \
-+	-L/usr/lib/x86_64-linux-gnu -lssl -lcrypto
++	-L/usr/lib -lssl -lcrypto
  
  # The crypt module is now disabled by default because it breaks builds
  # on many systems (where -lcrypt is needed), e.g. Linux (I believe).
@@ -208,7 +208,7 @@ diff -r 15c95b7d81dc Modules/Setup.dist
 +_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/stgdict.c _ctypes/cfield.c -I$(srcdir)/Include -I$(srcdir)/Modules/_ctypes -I$(srcdir)/Modules/_ctypes/libffi/x86_64-unknown-linux-gnu/include -L$(srcdir)/Modules/_ctypes/libffi/lib -L/usr/lib/x86_64-linux-gnu -lffi
 +
 +# _hashlib builtin
-+_hashlib _hashopenssl.c -L/usr/lib/x86_64-linux-gnu -lssl -lcrypto
++_hashlib _hashopenssl.c -L/usr/lib -lssl -lcrypto
 +
 +# future_builtins builtin
 +future_builtins future_builtins.c

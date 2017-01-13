@@ -1711,11 +1711,11 @@
       </build>
     </module>
 
-    <module built_once="True" name="Python-2.7.10">
+    <module built_once="True" name="Python-2.7.13">
       <source type="mercurial">
           <attribute name="url" value="https://hg.python.org/cpython"/>
-        <attribute name="module_directory" value="Python-2.7.10"/>
-        <attribute name="revision" value="v2.7.10" />
+        <attribute name="module_directory" value="Python-2.7.13"/>
+        <attribute name="revision" value="v2.7.13" />
         <attribute name="patch" value="$SRCDIR/../../python-2.7.10.patch" />
       </source>
       <depends_on name="setuptools-local" optional="False"/>
@@ -1726,39 +1726,24 @@
       <depends_on name="routes" optional="False"/>
       <depends_on name="webob" optional="False"/>
       <depends_on name="repoze" optional="False"/>
+      <depends_on name="tinyrpc" optional="False"/>
       <depends_on name="eventlet" optional="False"/>
       <build type="autotools" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
         <attribute name="configure_arguments" value="./configure 'CXX=g++' 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --with-cxx-main='g++' --enable-unicode=ucs4 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
         <attribute name="pre_installation" value="cd $SRCDIR/Modules/_ctypes/libffi ; ./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CPPFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --prefix=$SRCDIR/Modules/_ctypes/libffi ; make install"/>
-        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10 ; mv $INSTALLDIR/lib/libpython2.7.a $INSTALLDIR/lib/libpython2.7.x"/>
+        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.13 ; mv $INSTALLDIR/lib/libpython2.7.a $INSTALLDIR/lib/libpython2.7.x"/>
       </build>
     </module>
 
-    <module built_once="True" name="Python-2.7.10-pre">
+    <module built_once="True" name="Python-2.7.13-pycuda">
       <source type="mercurial">
           <attribute name="url" value="https://hg.python.org/cpython"/>
-        <attribute name="module_directory" value="Python-2.7.10-pre"/>
-        <attribute name="revision" value="v2.7.10" />
-        <attribute name="patch" value="$SRCDIR/../../python-2.7.10-pre.patch" />
-      </source>
-      <build type="autotools" objdir="no">
-        <attribute name="supported_os" value="linux;linux2"/>
-        <attribute name="configure_arguments" value="./configure 'CXX=g++' 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --enable-shared --with-cxx-main='g++' --enable-unicode=ucs4 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
-        <attribute name="pre_installation" value="cd $SRCDIR/Modules/_ctypes/libffi ; ./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CPPFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --prefix=$SRCDIR/Modules/_ctypes/libffi ; make install"/>
-        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-pre"/>
-      </build>
-    </module>
-
-    <module built_once="True" name="Python-2.7.10-pycuda">
-      <source type="mercurial">
-          <attribute name="url" value="https://hg.python.org/cpython"/>
-        <attribute name="module_directory" value="Python-2.7.10"/>
-        <attribute name="revision" value="v2.7.10" />
+        <attribute name="module_directory" value="Python-2.7.13"/>
+        <attribute name="revision" value="v2.7.13" />
         <attribute name="patch" value="$SRCDIR/../../python-2.7.10-cuda.patch" />
       </source>
       <depends_on name="setuptools-local" optional="False"/>
-      <!-- depends_on name="boost" optional="False"/ -->
       <depends_on name="greenlet" optional="False"/>
       <depends_on name="numpy" optional="False"/>
       <depends_on name="oslo_config" optional="False"/>
@@ -1766,13 +1751,14 @@
       <depends_on name="routes" optional="False"/>
       <depends_on name="webob" optional="False"/>
       <depends_on name="repoze" optional="False"/>
+      <depends_on name="tinyrpc" optional="False"/>
       <depends_on name="eventlet" optional="False"/>
       <depends_on name="pycuda" optional="False"/>
       <build type="autotools" objdir="no">
         <attribute name="supported_os" value="linux;linux2"/>
         <attribute name="configure_arguments" value="./configure 'CXX=g++' 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CXXFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --with-cxx-main='g++' --enable-unicode=ucs4 --prefix=$INSTALLDIR --exec-prefix=$INSTALLDIR"/>
         <attribute name="pre_installation" value="cd $SRCDIR/Modules/_ctypes/libffi ; ./configure 'CFLAGS=-fPIC -U_FORTIFY_SOURCE' 'CPPFLAGS=-fpic -U_FORTIFY_SOURCE' 'LINKFORSHARED=-pie -rdynamic' --prefix=$SRCDIR/Modules/_ctypes/libffi ; make install"/>
-        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.10 ; mv $INSTALLDIR/lib/libpython2.7.a $INSTALLDIR/lib/libpython2.7.x"/>
+        <attribute name="post_installation" value="cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2-dce ; cp $INSTALLDIR/bin/python2.7 $INSTALLDIR/bin/python2.7.13 ; mv $INSTALLDIR/lib/libpython2.7.a $INSTALLDIR/lib/libpython2.7.x"/>
       </build>
     </module>
 
@@ -1793,7 +1779,7 @@
         <attribute name="module_directory" value="markupsafe"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp -r $SRCDIR/markupsafe $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR/markupsafe $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -1804,7 +1790,7 @@
       </source>
       <depends_on name="markupsafe" optional="False"/>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp -r $SRCDIR/mako $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR/mako $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -1814,7 +1800,7 @@
         <attribute name="module_directory" value="decorator"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp $SRCDIR/src/decorator.py $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp $SRCDIR/src/decorator.py $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -1824,7 +1810,7 @@
         <attribute name="module_directory" value="pytools"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp -r $SRCDIR/pytools $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR/pytools $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -1834,7 +1820,7 @@
         <attribute name="module_directory" value="appdirs"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp $SRCDIR/appdirs.py $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp $SRCDIR/appdirs.py $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -1845,7 +1831,7 @@
         <attribute name="module_directory" value="bpl-subset"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="mv $SRCDIR/bpl_subset/libs/python/src/errors.cpp $SRCDIR/bpl_subset/libs/python/src/bpl_errors.cpp ; mv $SRCDIR/bpl_subset/libs/python/src/import.cpp $SRCDIR/bpl_subset/libs/python/src/bpl_import.cpp ; mv $SRCDIR/bpl_subset/libs/thread/src/pthread/thread.cpp $SRCDIR/bpl_subset/libs/thread/src/pthread/bpl_thread.cpp ; mv $SRCDIR/bpl_subset/libs/thread/src/future.cpp $SRCDIR/bpl_subset/libs/thread/src/bpl_future.cpp ; cp -r $SRCDIR/bpl_subset $SRCDIR/../Python-2.7.10/Modules/"/>
+        <attribute name="pre_installation" value="mv $SRCDIR/bpl_subset/libs/python/src/errors.cpp $SRCDIR/bpl_subset/libs/python/src/bpl_errors.cpp ; mv $SRCDIR/bpl_subset/libs/python/src/import.cpp $SRCDIR/bpl_subset/libs/python/src/bpl_import.cpp ; mv $SRCDIR/bpl_subset/libs/thread/src/pthread/thread.cpp $SRCDIR/bpl_subset/libs/thread/src/pthread/bpl_thread.cpp ; mv $SRCDIR/bpl_subset/libs/thread/src/future.cpp $SRCDIR/bpl_subset/libs/thread/src/bpl_future.cpp ; cp -r $SRCDIR/bpl_subset $SRCDIR/../Python-2.7.13/Modules/"/>
       </build>
     </module>
 
@@ -1874,7 +1860,7 @@
       <depends_on name="bpl_subset" optional="False"/>
       <depends_on name="compyte" optional="False"/>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="ln -s $SRCDIR/src $SRCDIR/../Python-2.7.10/Modules/pycuda"/>
+        <attribute name="pre_installation" value="ln -s $SRCDIR/src $SRCDIR/../Python-2.7.13/Modules/pycuda"/>
       </build>
     </module>
 
@@ -1886,7 +1872,7 @@
         <attribute name="module_directory" value="numpy"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cd $SRCDIR ; python setup.py build_ext --inplace ; ln -s $SRCDIR/build/temp.linux-x86_64-2.7 $SRCDIR/numpy/core/src/npylibs ; ln -s $SRCDIR/numpy $SRCDIR/../Python-2.7.10/Modules/numpy"/>
+        <attribute name="pre_installation" value="cd $SRCDIR ; python setup.py build_ext --inplace ; ln -s $SRCDIR/build/temp.linux-x86_64-2.7 $SRCDIR/numpy/core/src/npylibs ; ln -s $SRCDIR/numpy $SRCDIR/../Python-2.7.13/Modules/numpy"/>
       </build>
     </module>
 
@@ -1896,7 +1882,7 @@
         <attribute name="module_directory" value="greenlet"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp -r $SRCDIR $SRCDIR/../Python-2.7.10/Modules/"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR $SRCDIR/../Python-2.7.13/Modules/"/>
       </build>
     </module>
 
@@ -1906,7 +1892,7 @@
         <attribute name="module_directory" value="setuptools"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp -r $SRCDIR/setuptools $SRCDIR/../Python-2.7.10/Lib/ ; cp -r $SRCDIR/pkg_resources $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR/setuptools $SRCDIR/../Python-2.7.13/Lib/ ; cp -r $SRCDIR/pkg_resources $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -1916,7 +1902,7 @@
         <attribute name="module_directory" value="eventlet"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp -r $SRCDIR/eventlet $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR/eventlet $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -1928,7 +1914,7 @@
       </source>
       <depends_on name="six" optional="False"/>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp -r $SRCDIR/oslo_config $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR/oslo_config $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -1938,7 +1924,7 @@
         <attribute name="module_directory" value="six"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp -r $SRCDIR/six.py $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR/six.py $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -1948,7 +1934,7 @@
         <attribute name="module_directory" value="netaddr"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp -r $SRCDIR/netaddr $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR/netaddr $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -1958,7 +1944,7 @@
         <attribute name="module_directory" value="routes"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp -r $SRCDIR/routes $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR/routes $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -1968,7 +1954,7 @@
         <attribute name="module_directory" value="repoze"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp -r $SRCDIR/repoze $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR/repoze $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -1978,7 +1964,17 @@
         <attribute name="module_directory" value="webob"/>
       </source>
       <build type="none" objdir="no">
-        <attribute name="pre_installation" value="cp -r $SRCDIR/webob $SRCDIR/../Python-2.7.10/Lib/"/>
+        <attribute name="pre_installation" value="cp -r $SRCDIR/webob $SRCDIR/../Python-2.7.13/Lib/"/>
+      </build>
+    </module>
+
+    <module built_once="True" name="tinyrpc">
+      <source type="archive">
+        <attribute name="url" value="https://pypi.python.org/packages/6c/58/76f73176153bf86990381189e1d9b187a8406788d5365c1e2e4ecd078268/tinyrpc-0.5.tar.gz#md5=4bb9ed559bcccc4bf91a7843da781d28"/>
+        <attribute name="module_directory" value="tinyrpc"/>
+      </source>
+      <build type="none" objdir="no">
+        <attribute name="pre_installation" value="cp -r $SRCDIR/tinyrpc $SRCDIR/../Python-2.7.13/Lib/"/>
       </build>
     </module>
 
@@ -2034,7 +2030,7 @@
       <depends_on name="POX" optional="False"/>
       <depends_on name="ns-3-sdn-1.0" optional="False"/>
       <depends_on name="net-next-sim-2.6.36" optional="False"/>
-      <depends_on name="Python-2.7.10" optional="False"/>
+      <depends_on name="Python-2.7.13" optional="False"/>
       <depends_on name="iproute-2.6.38-fix-01" optional="False"/>
       <depends_on name="bash" optional="True"/>
       <build type="waf" objdir="build">
@@ -2150,7 +2146,7 @@
 <build type="waf">
 <attribute name="CXXFLAGS" value="" />
 <attribute name="pre_installation" value="cd $SRCDIR ; patch -p1 -i $SRCDIR/src/ofswitch13/utils/ofswitch13-csma-3_24_1.patch ; patch -p1 -i $SRCDIR/src/ofswitch13/utils/ofswitch13-doc-3_24_1.patch" />
-<attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --enable-examples --enable-tests --enable-mpi --enable-sdn --with-ofswitch13=$SRCDIR/../ofsoftswitch13"/>
+<attribute name="configure_arguments" value="configure --prefix=$INSTALLDIR --enable-examples --enable-tests --enable-sudo --enable-mpi --enable-sdn --with-ofswitch13=$SRCDIR/../ofsoftswitch13"/>
 <attribute name="v_LD_LIBRARY" value="" />
 <attribute name="LDFLAGS" value="" />
 <attribute name="CC" value="" />
@@ -2258,7 +2254,7 @@
       <depends_on name="POX" optional="False"/>
       <depends_on name="ns-3-sdn-3.24" optional="False"/>
       <depends_on name="net-next-sim-2.6.36" optional="False"/>
-      <depends_on name="Python-2.7.10" optional="True"/>
+      <depends_on name="Python-2.7.13" optional="True"/>
       <depends_on name="jdk8u" optional="True"/>
       <depends_on name="iproute-2.6.38-fix-01" optional="False"/>
       <depends_on name="bash" optional="True"/>
@@ -2290,7 +2286,7 @@
       <depends_on name="POX" optional="False"/>
       <depends_on name="ns-3-sdn-3.24" optional="False"/>
       <depends_on name="net-next-sim-2.6.36" optional="False"/>
-      <depends_on name="Python-2.7.10-pycuda" optional="False"/>
+      <depends_on name="Python-2.7.13-pycuda" optional="False"/>
       <depends_on name="jdk8u" optional="True"/>
       <depends_on name="iproute-2.6.38-fix-01" optional="False"/>
       <depends_on name="bash" optional="True"/>
@@ -2316,7 +2312,7 @@
     <module name="Ryu">
       <source type="git">
           <attribute name="url" value="https://github.com/osrg/ryu.git"/>
-        <attribute name="revision" value="0aefad7048079656cdaad138be58f017e6b4f1ce"/>
+        <attribute name="revision" value="v4.9"/>
         <attribute name="module_directory" value="ryu"/>
       </source>
       <build type="none" objdir="no">
