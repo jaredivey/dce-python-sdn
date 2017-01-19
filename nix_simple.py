@@ -34,7 +34,9 @@ from ryu.lib.packet import ethernet, arp, ipv4
 from ryu.lib.packet import ether_types
 import ryu.topology.api as api
 
-import time
+from Queue import PriorityQueue
+
+import time, cProfile, pstats, StringIO
 
 class NixSimpleSwitch13(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -78,6 +80,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
+        pr,start = self.enableProf()
         
         # If you hit this you might want to increase
         # the "miss_send_length" of your switch
@@ -95,6 +98,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
 
         if eth.ethertype == ether_types.ETH_TYPE_LLDP:
             # ignore lldp packet
+            self.disableProf(pr,start,"LLDP")
             return
         
         dst = eth.dst
@@ -114,12 +118,12 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                 # Send to ARP proxy. Cannot perform NIx routing until both hosts
                 # are known by the controller
                 self.ArpProxy (msg.data, datapath, in_port, links, switches, hosts)
-                return
             elif arp_pkt.opcode == arp.ARP_REPLY:
                 self.ArpReply (msg.data, datapath, arp_pkt.dst_ip, links, switches, hosts)
-                return
+            self.disableProf(pr,start,"ARP")
+            return
         
-        self.logger.info("%s: packet in %s %s %s %s", time.time(), dpid, src, dst, in_port)
+        #self.logger.info("%s: packet in %s %s %s %s", time.time(), dpid, src, dst, in_port)
         
         # Start nix vector code        
         numNodes = len(switches) + len(hosts)
@@ -143,12 +147,13 @@ class NixSimpleSwitch13(app_manager.RyuApp):
 
         if srcNode is None or dstNode is None:
             self.ArpProxy (msg.data, datapath, in_port, links, switches, hosts)
+            self.disableProf(pr,start,"UNKDST")
             return
                     
         srcSwitch = [switch for switch in switches if switch.dp.id == srcNode.port.dpid][0]
         dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
         parentVec = {}
-        foundIt = self.BFS (numNodes, srcSwitch, dstSwitch,
+        foundIt = self.UCS (numNodes, srcSwitch, dstSwitch,
                                        links, switches, hosts, parentVec)
         
         sdnNix = []
@@ -161,6 +166,8 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         
         for curNix in sdnNix:
             self.sendNixRules (srcSwitch, curNix[0], curNix[1], eth, msg)
+
+        self.disableProf(pr,start,"COMPLETION")
         
     def ArpProxy (self, data, datapath, in_port, links, switches, hosts):
         for switch in switches:
@@ -181,7 +188,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                                               in_port=switch.dp.ofproto.OFPP_CONTROLLER,
                                               actions=actions, data=data)
                     
-                    self.logger.info("%s: Sending ARP Request: dpid=%s, port=%s", time.time(), switch.dp.id, port)
+                    #self.logger.info("%s: Sending ARP Request: dpid=%s, port=%s", time.time(), switch.dp.id, port)
                     switch.dp.send_msg(out)
 
     def ArpReply (self, data, datapath, dst_ip, links, switches, hosts):
@@ -195,7 +202,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                                               in_port=switch.dp.ofproto.OFPP_CONTROLLER,
                                               actions=actions, data=data)
 
-                    self.logger.info("%s: Sending ARP Reply: dpid=%s, ip=%s, port=%s", time.time(), switch.dp.id, dst_ip, host.port.port_no)
+                    #self.logger.info("%s: Sending ARP Reply: dpid=%s, ip=%s, port=%s", time.time(), switch.dp.id, dst_ip, host.port.port_no)
                     switch.dp.send_msg(out)
         
     def BFS (self, nNodes, srcSwitch, dstSwitch, links, switches, hosts, parentVector):
@@ -219,6 +226,34 @@ class NixSimpleSwitch13(app_manager.RyuApp):
             del(greyNodeList[0])
                          
         return False
+
+    def UCS (self, nNodes, srcSwitch, dstSwitch, links, switches, hosts, parentVector):
+        parentVector[srcSwitch.dp.id] = srcSwitch
+        visited = set()
+        q = PriorityQueue()
+        q.put((0, srcSwitch, []))
+
+        while q:
+            cost,point,path = q.get()
+            if point not in visited:
+                visited.add(point)
+
+                path = path + [point]
+                if point == dstSwitch:
+                    for index in range(1,len(path)):
+                        parentVector[path[index].dp.id] = path[index-1]
+                    self.logger.info("Cost: %f", cost)
+                    return True
+
+                for link in links:
+                    if link.src.dpid == point.dp.id:
+                        if not link.dst.is_live():
+                            continue
+
+                        child = [switch for switch in switches if switch.dp.id == link.dst.dpid][0]
+                        if child not in visited:
+                            total_cost = cost + link.delay
+                            q.put((total_cost,child,path))
     
     def BuildNixVector (self, parentVector, srcSwitch, dstSwitch, links, switches, hosts, nixVector, sdnNix):
         if srcSwitch == dstSwitch:
@@ -261,7 +296,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                                 match=match, instructions=inst)
         switch.dp.send_msg(mod)
                     
-        self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
+        #self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
         
         if srcSwitch == switch:
             data = None
@@ -276,3 +311,16 @@ class NixSimpleSwitch13(app_manager.RyuApp):
     
     def bin(self, s):
         return str(s) if s<=1 else bin(s>>1) + str(s&1)
+
+    def enableProf(self):
+        pr = cProfile.Profile()
+        pr.enable()
+        return pr,time.clock()
+
+    def disableProf(self, pr, start, whichcase):
+        completion = time.clock() - start
+        pr.disable()
+        s = StringIO.StringIO()
+        ps = pstats.Stats(pr, stream=s)
+        ps.print_stats(0)
+        self.logger.info("%s\t%f\t%s", whichcase, completion, s.getvalue())

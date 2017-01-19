@@ -35,8 +35,9 @@ from ryu.lib.packet import ethernet, arp, ipv4
 from ryu.lib.packet import ether_types
 import ryu.topology.api as api
 
-import os, time, heapq
 from Queue import PriorityQueue
+
+import time, cProfile, pstats, StringIO
 
 UINT64_MAX = (1 << 64) - 1
 
@@ -73,7 +74,6 @@ class NixMpls13(app_manager.RyuApp):
 
         for port in datapath.ports:
             if port != ofproto.OFPP_LOCAL:
-                    self.logger.info("%s has port %s", datapath, port)
                     mpls_match = parser.OFPMatch()
                     mpls_match.append_field(ofproto.OXM_OF_ETH_TYPE, ether_types.ETH_TYPE_MPLS)
                     mpls_match.append_field(ofproto.OXM_OF_MPLS_LABEL, port)
@@ -107,7 +107,6 @@ class NixMpls13(app_manager.RyuApp):
             mod = parser.OFPFlowMod(datapath=datapath, priority=priority,
                                     table_id=table_id,
                                     match=match, instructions=inst)
-        self.logger.info("Sending new flow to add: %s", mod)
         datapath.send_msg(mod)
 
     def mod_flow(self, datapath, priority, match, actions, table_id=0, buffer_id=None):
@@ -128,12 +127,12 @@ class NixMpls13(app_manager.RyuApp):
                                     command=ofproto.OFPFC_MODIFY,
                                     table_id=table_id,
                                     instructions=inst)
-        self.logger.info("Sending new flow to mod: %s", mod)
         datapath.send_msg(mod)
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
-        
+        pr,start = self.enableProf()        
+
         # If you hit this you might want to increase
         # the "miss_send_length" of your switch
         if ev.msg.msg_len < ev.msg.total_len:
@@ -150,6 +149,7 @@ class NixMpls13(app_manager.RyuApp):
 
         if eth.ethertype == ether_types.ETH_TYPE_LLDP:
             # ignore lldp packet
+            self.disableProf(pr,start, "LLDP")
             return
         
         dst = eth.dst
@@ -169,12 +169,12 @@ class NixMpls13(app_manager.RyuApp):
                 # Send to ARP proxy. Cannot perform NIx routing until both hosts
                 # are known by the controller
                 self.ArpProxy (msg.data, datapath, in_port, links, switches, hosts)
-                return
             elif arp_pkt.opcode == arp.ARP_REPLY:
                 self.ArpReply (msg.data, datapath, arp_pkt.dst_ip, links, switches, hosts)
-                return
+            self.disableProf(pr,start,"ARP")
+            return
         
-        self.logger.info("%s: packet in %s %s %s %s %s", time.time(), dpid, src, dst, in_port, eth.ethertype)
+        #self.logger.info("%s: packet in %s %s %s %s %s", time.time(), dpid, src, dst, in_port, eth.ethertype)
         
         # Start nix vector code        
         numNodes = len(switches) + len(hosts)
@@ -198,6 +198,7 @@ class NixMpls13(app_manager.RyuApp):
         
         if srcNode is None or dstNode is None:
             self.ArpProxy (msg.data, datapath, in_port, links, switches, hosts)
+            self.disableProf(pr,start,"UNKDST")
             return
         srcSwitch = [switch for switch in switches if switch.dp.id == srcNode.port.dpid][0]
         dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
@@ -212,6 +213,7 @@ class NixMpls13(app_manager.RyuApp):
             
             sdnNix.insert(0, (dstSwitch, dstNode.port.port_no))
             self.sendNixPacket (ofproto, parser, srcSwitch, sdnNix, msg, src_ip, dst_ip)
+        self.disableProf(pr,start,"COMPLETION")
         
     def ArpProxy (self, data, datapath, in_port, links, switches, hosts):
         for switch in switches:
@@ -232,7 +234,7 @@ class NixMpls13(app_manager.RyuApp):
                                               in_port=switch.dp.ofproto.OFPP_CONTROLLER,
                                               actions=actions, data=data)
                     
-                    self.logger.info("%s: Sending ARP Request: dpid=%s, port=%s", time.time(), switch.dp.id, port)
+                    #self.logger.info("%s: Sending ARP Request: dpid=%s, port=%s", time.time(), switch.dp.id, port)
                     switch.dp.send_msg(out)
 
     def ArpReply (self, data, datapath, dst_ip, links, switches, hosts):
@@ -246,7 +248,7 @@ class NixMpls13(app_manager.RyuApp):
                                               in_port=switch.dp.ofproto.OFPP_CONTROLLER,
                                               actions=actions, data=data)
 
-                    self.logger.info("%s: Sending ARP Reply: dpid=%s, port=%s", time.time(), switch.dp.id, host.port.port_no)
+                    #self.logger.info("%s: Sending ARP Reply: dpid=%s, port=%s", time.time(), switch.dp.id, host.port.port_no)
                     switch.dp.send_msg(out)
         
     def BFS (self, nNodes, srcSwitch, dstSwitch, links, switches, hosts, parentVector):
@@ -256,8 +258,6 @@ class NixMpls13(app_manager.RyuApp):
         while len(greyNodeList) != 0:
             currNode = greyNodeList[0]
             if (currNode == dstSwitch):
-                for key in parentVector:
-                    self.logger.info("%s %s", key, parentVector[key])
                 return True
               
             for link in links:
@@ -288,8 +288,7 @@ class NixMpls13(app_manager.RyuApp):
                 if point == dstSwitch:
                     for index in range(1,len(path)):
                         parentVector[path[index].dp.id] = path[index-1]
-                        self.logger.info("%s", path[index-1])
-                    self.logger.info("Cost: %f, %s", cost, parentVector)
+                    self.logger.info("Cost: %f", cost)
                     return True
 
                 for link in links:
@@ -327,7 +326,7 @@ class NixMpls13(app_manager.RyuApp):
         if totalNeighbors > 1:
             newNix = [int(c) for c in self.bin(destId)[2:]]
             nixVector.extend(newNix)
-        self.logger.info("SDN Nix: %s", sdnNix)
+        #self.logger.info("SDN Nix: %s", sdnNix)
         return self.BuildNixVector(parentVector, srcSwitch, parentSwitch, links, switches, hosts, nixVector, sdnNix)
     
     def sendNixPacket(self, ofproto, parser, srcSwitch, sdnNix, msg, src_ip, dst_ip):
@@ -353,7 +352,6 @@ class NixMpls13(app_manager.RyuApp):
         match.append_field(ofproto.OXM_OF_IPV4_DST, ip.ipv4_to_int(dst_ip), ip.text_to_int("255.255.0.0"))
         mod = parser.OFPFlowMod(datapath=srcSwitch.dp, priority=10, table_id=0,
                                 match=match, instructions=inst)
-        self.logger.info("Sending new flow to add: %s", mod)
         srcSwitch.dp.send_msg(mod)
         
         data = None
@@ -367,3 +365,16 @@ class NixMpls13(app_manager.RyuApp):
         
     def bin(self, s):
         return str(s) if s<=1 else bin(s>>1) + str(s&1)
+
+    def enableProf(self):
+        pr = cProfile.Profile()
+        pr.enable()
+        return pr,time.clock()
+
+    def disableProf(self, pr, start, whichcase):
+        completion = time.clock() - start
+        pr.disable()
+        s = StringIO.StringIO()
+        ps = pstats.Stats(pr, stream=s)
+        ps.print_stats(0)
+        self.logger.info("%s\t%f\t%s", whichcase, completion, s.getvalue())
