@@ -68,6 +68,8 @@ class NixMpls13(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, CONFIG_DISPATCHER)
     def port_desc_handler(self, ev):
+        pr,start = self.enableProf()
+
         datapath = ev.msg.datapath
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
@@ -90,7 +92,7 @@ class NixMpls13(app_manager.RyuApp):
                                     parser.OFPActionOutput(port)]
                     self.add_flow(datapath, 10, mpls_match, mpls_actions)
 
-                    time.sleep(0.01)
+        self.disableProf(pr,start,"PORTDESC")
 
     def add_flow(self, datapath, priority, match, actions, table_id=0, buffer_id=None):
         ofproto = datapath.ofproto
@@ -131,8 +133,6 @@ class NixMpls13(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
-        pr,start = self.enableProf()        
-
         # If you hit this you might want to increase
         # the "miss_send_length" of your switch
         if ev.msg.msg_len < ev.msg.total_len:
@@ -149,8 +149,8 @@ class NixMpls13(app_manager.RyuApp):
 
         if eth.ethertype == ether_types.ETH_TYPE_LLDP:
             # ignore lldp packet
-            self.disableProf(pr,start, "LLDP")
             return
+        pr,start = self.enableProf()        
         
         dst = eth.dst
         src = eth.src
@@ -203,7 +203,7 @@ class NixMpls13(app_manager.RyuApp):
         srcSwitch = [switch for switch in switches if switch.dp.id == srcNode.port.dpid][0]
         dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
         parentVec = {}
-        foundIt = self.BFS (numNodes, srcSwitch, dstSwitch,
+        foundIt = self.UCS (numNodes, srcSwitch, dstSwitch,
                                        links, switches, hosts, parentVec)
         
         sdnNix = []

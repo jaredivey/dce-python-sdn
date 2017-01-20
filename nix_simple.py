@@ -79,9 +79,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         datapath.send_msg(mod)
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
-    def _packet_in_handler(self, ev):
-        pr,start = self.enableProf()
-        
+    def _packet_in_handler(self, ev):        
         # If you hit this you might want to increase
         # the "miss_send_length" of your switch
         if ev.msg.msg_len < ev.msg.total_len:
@@ -98,9 +96,10 @@ class NixSimpleSwitch13(app_manager.RyuApp):
 
         if eth.ethertype == ether_types.ETH_TYPE_LLDP:
             # ignore lldp packet
-            self.disableProf(pr,start,"LLDP")
             return
-        
+
+        pr,start = self.enableProf()
+
         dst = eth.dst
         src = eth.src
 
