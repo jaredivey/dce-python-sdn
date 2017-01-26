@@ -204,28 +204,6 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                     #self.logger.info("%s: Sending ARP Reply: dpid=%s, ip=%s, port=%s", time.time(), switch.dp.id, dst_ip, host.port.port_no)
                     switch.dp.send_msg(out)
         
-    def BFS (self, nNodes, srcSwitch, dstSwitch, links, switches, hosts, parentVector):
-        greyNodeList = [ srcSwitch ]
-        
-        parentVector[srcSwitch.dp.id] = greyNodeList[0]
-        while len(greyNodeList) != 0:
-            currNode = greyNodeList[0]
-            if (currNode == dstSwitch):
-                return True
-              
-            for link in links:
-                if link.src.dpid == currNode.dp.id:
-                    if not link.dst.is_live():
-                        continue
-                
-                    if parentVector.get(link.dst.dpid) == None:
-                        parentVector[link.dst.dpid] = currNode
-                        currSwitch = [switch for switch in switches if switch.dp.id == link.dst.dpid][0]
-                        greyNodeList.append(currSwitch)
-            del(greyNodeList[0])
-                         
-        return False
-
     def UCS (self, nNodes, srcSwitch, dstSwitch, links, switches, hosts, parentVector):
         parentVector[srcSwitch.dp.id] = srcSwitch
         visited = set()
