@@ -87,8 +87,6 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                               ev.msg.msg_len, ev.msg.total_len)
         msg = ev.msg
         datapath = msg.datapath
-        ofproto = datapath.ofproto
-        parser = datapath.ofproto_parser
         in_port = msg.match['in_port']
 
         pkt = packet.Packet(msg.data)
@@ -99,18 +97,12 @@ class NixSimpleSwitch13(app_manager.RyuApp):
             return
 
         pr,start = self.enableProf()
-
-        dst = eth.dst
-        src = eth.src
-
-        dpid = datapath.id
         
         # Figure out environment
         links = api.get_all_link(self)
         switches = api.get_all_switch(self)
         hosts = api.get_all_host(self)
-        
-        arp_pkt = None
+
         if eth.ethertype == ether_types.ETH_TYPE_ARP:
             arp_pkt = pkt.get_protocols(arp.arp)[0]
             if arp_pkt.opcode == arp.ARP_REQUEST:                
@@ -124,8 +116,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         
         #self.logger.info("%s: packet in %s %s %s %s", time.time(), dpid, src, dst, in_port)
         
-        # Start nix vector code        
-        numNodes = len(switches) + len(hosts)
+        # Start nix vector code
         src_ip = ''
         dst_ip = ''
         srcNode = None
@@ -152,8 +143,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         srcSwitch = [switch for switch in switches if switch.dp.id == srcNode.port.dpid][0]
         dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
         parentVec = {}
-        foundIt = self.UCS (numNodes, srcSwitch, dstSwitch,
-                                       links, switches, hosts, parentVec)
+        foundIt = self.UCS (srcSwitch, dstSwitch, links, switches, parentVec)
         
         sdnNix = []
         nixVector = []
@@ -168,7 +158,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
 
         self.disableProf(pr,start,"COMPLETION")
         
-    def ArpProxy (self, data, datapath, in_port, links, switches, hosts):
+    def ArpProxy(self, data, datapath, in_port, links, switches, hosts):
         for switch in switches:
             # Get all usable ports for this switch and then remove those ports
             # associated with switch-to-switch connections to look at edge ports
@@ -190,7 +180,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                     #self.logger.info("%s: Sending ARP Request: dpid=%s, port=%s", time.time(), switch.dp.id, port)
                     switch.dp.send_msg(out)
 
-    def ArpReply (self, data, datapath, dst_ip, links, switches, hosts):
+    def ArpReply(self, data, datapath, dst_ip, links, switches, hosts):
         for host in hosts:
             for switch in switches:
                 # Push an ARP reply out of the appropriate switch port
@@ -204,7 +194,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                     #self.logger.info("%s: Sending ARP Reply: dpid=%s, ip=%s, port=%s", time.time(), switch.dp.id, dst_ip, host.port.port_no)
                     switch.dp.send_msg(out)
         
-    def UCS (self, nNodes, srcSwitch, dstSwitch, links, switches, hosts, parentVector):
+    def UCS(self, srcSwitch, dstSwitch, links, switches, parentVector):
         parentVector[srcSwitch.dp.id] = srcSwitch
         visited = set()
         q = PriorityQueue()
@@ -232,7 +222,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                             total_cost = cost + link.delay
                             q.put((total_cost,child,path))
     
-    def BuildNixVector (self, parentVector, srcSwitch, dstSwitch, links, switches, hosts, nixVector, sdnNix):
+    def BuildNixVector(self, parentVector, srcSwitch, dstSwitch, links, switches, hosts, nixVector, sdnNix):
         if srcSwitch == dstSwitch:
             return True
         
@@ -259,7 +249,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         #self.logger.info("SDN Nix: %s", sdnNix)
         return self.BuildNixVector(parentVector, srcSwitch, parentSwitch, links, switches, hosts, nixVector, sdnNix)
     
-    def sendNixRules (self, srcSwitch, switch, port_no, eth, msg):
+    def sendNixRules(self, srcSwitch, switch, port_no, eth, msg):
         ofproto = switch.dp.ofproto
         parser = switch.dp.ofproto_parser
 

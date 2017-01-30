@@ -29,17 +29,13 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
-from ryu.lib import mac,ip
+from ryu.lib import ip
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet, arp, ipv4
 from ryu.lib.packet import ether_types
 import ryu.topology.api as api
 
-from Queue import PriorityQueue
-
 import time, cProfile, pstats, StringIO
-
-UINT64_MAX = (1 << 64) - 1
 
 class NixMpls13(app_manager.RyuApp):
     OFP_VERSIONS = [ofproto_v1_3.OFP_VERSION]
@@ -150,19 +146,13 @@ class NixMpls13(app_manager.RyuApp):
         if eth.ethertype == ether_types.ETH_TYPE_LLDP:
             # ignore lldp packet
             return
-        pr,start = self.enableProf()        
-        
-        dst = eth.dst
-        src = eth.src
-
-        dpid = datapath.id
+        pr,start = self.enableProf()
         
         # Figure out environment
         links = api.get_all_link(self)
         switches = api.get_all_switch(self)
         hosts = api.get_all_host(self)
-        
-        arp_pkt = None
+
         if eth.ethertype == ether_types.ETH_TYPE_ARP:
             arp_pkt = pkt.get_protocols(arp.arp)[0]
             if arp_pkt.opcode == arp.ARP_REQUEST:
@@ -176,8 +166,7 @@ class NixMpls13(app_manager.RyuApp):
         
         #self.logger.info("%s: packet in %s %s %s %s %s", time.time(), dpid, src, dst, in_port, eth.ethertype)
         
-        # Start nix vector code        
-        numNodes = len(switches) + len(hosts)
+        # Start nix vector code
         src_ip = ''
         dst_ip = ''
         srcNode = None
@@ -203,8 +192,7 @@ class NixMpls13(app_manager.RyuApp):
         srcSwitch = [switch for switch in switches if switch.dp.id == srcNode.port.dpid][0]
         dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
         parentVec = {}
-        foundIt = self.BFS (numNodes, srcSwitch, dstSwitch,
-                                       links, switches, hosts, parentVec)
+        foundIt = self.BFS (srcSwitch, dstSwitch, links, switches, parentVec)
         
         sdnNix = []
         nixVector = []
@@ -215,7 +203,7 @@ class NixMpls13(app_manager.RyuApp):
             self.sendNixPacket (ofproto, parser, srcSwitch, sdnNix, msg, src_ip, dst_ip)
         self.disableProf(pr,start,"COMPLETION")
         
-    def ArpProxy (self, data, datapath, in_port, links, switches, hosts):
+    def ArpProxy(self, data, datapath, in_port, links, switches, hosts):
         for switch in switches:
             # Get all usable ports for this switch and then remove those ports
             # associated with switch-to-switch connections to look at edge ports
@@ -237,7 +225,7 @@ class NixMpls13(app_manager.RyuApp):
                     #self.logger.info("%s: Sending ARP Request: dpid=%s, port=%s", time.time(), switch.dp.id, port)
                     switch.dp.send_msg(out)
 
-    def ArpReply (self, data, datapath, dst_ip, links, switches, hosts):
+    def ArpReply(self, data, datapath, dst_ip, links, switches, hosts):
         for host in hosts:
             for switch in switches:
                 # Push an ARP reply out of the appropriate switch port
@@ -251,7 +239,7 @@ class NixMpls13(app_manager.RyuApp):
                     #self.logger.info("%s: Sending ARP Reply: dpid=%s, port=%s", time.time(), switch.dp.id, host.port.port_no)
                     switch.dp.send_msg(out)
         
-    def BFS (self, nNodes, srcSwitch, dstSwitch, links, switches, hosts, parentVector):
+    def BFS(self, srcSwitch, dstSwitch, links, switches, parentVector):
         greyNodeList = [ srcSwitch ]
         
         parentVector[srcSwitch.dp.id] = greyNodeList[0]
@@ -273,7 +261,7 @@ class NixMpls13(app_manager.RyuApp):
                          
         return False
 
-    def BuildNixVector (self, parentVector, srcSwitch, dstSwitch, links, switches, hosts, nixVector, sdnNix):
+    def BuildNixVector(self, parentVector, srcSwitch, dstSwitch, links, switches, hosts, nixVector, sdnNix):
         if srcSwitch == dstSwitch:
             return True
         
