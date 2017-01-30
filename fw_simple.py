@@ -33,7 +33,7 @@ from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet, arp, ipv4
 from ryu.lib.packet import ether_types
 import ryu.topology.api as api
-
+import ryu.topology.event as event
 import numpy
 
 import time, cProfile, pstats, StringIO
@@ -44,7 +44,6 @@ class FwSimpleSwitch13(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(FwSimpleSwitch13, self).__init__(*args, **kwargs)
         self.logger.info("%s: Starting app", time.time())
-
         self.next_array = []
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
@@ -65,16 +64,14 @@ class FwSimpleSwitch13(app_manager.RyuApp):
                                           ofproto.OFPCML_NO_BUFFER)]
         self.add_flow(datapath, 0, match, actions)
 
-    @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, CONFIG_DISPATCHER)
-    def port_desc_handler(self, ev):
+    @set_ev_cls(event.EventLinkAdd, CONFIG_DISPATCHER)
+    def new_link_handler(self, ev):
         pr,start = self.enableProf()
 
         links = api.get_all_link(self)
         switches = api.get_all_switch(self)
 
-        temp_array = self.FloydWarshall(switches, links)
-        self.next_array = temp_array
-
+        self.next_array = self.FloydWarshall(switches, links)
         self.disableProf(pr,start,"FW")
 
     def add_flow(self, datapath, priority, match, actions, buffer_id=None):
@@ -164,7 +161,7 @@ class FwSimpleSwitch13(app_manager.RyuApp):
         sdnNix.append((dstSwitch, dstNode.port.port_no))
         
         for curNix in sdnNix:
-            self.sendNixRules (srcSwitch, curNix[0], curNix[1], msg)
+            self.sendNixRules (srcSwitch, curNix[0], curNix[1], eth, msg)
         self.disableProf(pr,start,"COMPLETION")
         
     def ArpProxy (self, data, datapath, in_port, links, switches, hosts):
@@ -186,7 +183,7 @@ class FwSimpleSwitch13(app_manager.RyuApp):
                                               in_port=switch.dp.ofproto.OFPP_CONTROLLER,
                                               actions=actions, data=data)
                     
-                    self.logger.info("%s: Sending ARP Request: dpid=%s, port=%s", time.time(), switch.dp.id, port)
+                    #self.logger.info("%s: Sending ARP Request: dpid=%s, port=%s", time.time(), switch.dp.id, port)
                     switch.dp.send_msg(out)
 
     def ArpReply (self, data, datapath, dst_ip, links, switches, hosts):
@@ -200,7 +197,7 @@ class FwSimpleSwitch13(app_manager.RyuApp):
                                               in_port=switch.dp.ofproto.OFPP_CONTROLLER,
                                               actions=actions, data=data)
 
-                    self.logger.info("%s: Sending ARP Reply: dpid=%s, ip=%s, port=%s", time.time(), switch.dp.id, dst_ip, host.port.port_no)
+                    #self.logger.info("%s: Sending ARP Reply: dpid=%s, ip=%s, port=%s", time.time(), switch.dp.id, dst_ip, host.port.port_no)
                     switch.dp.send_msg(out)
     
     def BuildNixVector (self, srcSwitch, dstSwitch, links, sdnNix):
@@ -213,9 +210,12 @@ class FwSimpleSwitch13(app_manager.RyuApp):
 
         while src != dst:
             currSwitch = api.get_switch(self, src)[0]
-            nextLink = [link for link in links if link.src.dpid == currSwitch.dp.id and link.dst.dpid == self.next_array[src][dst]][0]
-            sdnNix.append((currSwitch, nextLink.src.port_no))
-            src = self.next_array[src][dst]
+            for link in links:
+                if link.src.dpid == currSwitch.dp.id and link.dst.dpid == self.next_array[src][dst]:
+                    sdnNix.append((currSwitch, link.src.port_no))
+                    src = self.next_array[src][dst]
+                    break
+                
         return True
 
     def FloydWarshall (self, switches, links):
@@ -232,7 +232,6 @@ class FwSimpleSwitch13(app_manager.RyuApp):
         for key1, row in adj_graph.iteritems():
             for key2, value in row.iteritems():
                 adj_array[key1, key2] = value
-        #self.logger.debug("%s", adj_array)
 
         next_array = [ [ i for i in range(N) ] for j in range(N) ]
         for k in range(1,N):
@@ -241,11 +240,9 @@ class FwSimpleSwitch13(app_manager.RyuApp):
                     if adj_array[i,k] + adj_array[k,j] < adj_array[i,j]:
                         adj_array[i,j] = adj_array[i,k] + adj_array[k,j]
                         next_array[i][j] = next_array[i][k]
-        #self.logger.debug("%s", adj_array)
-        #self.logger.debug("%s", next_array)
         return next_array
 
-    def sendNixRules(self, srcSwitch, switch, port_no, msg):
+    def sendNixRules(self, srcSwitch, switch, port_no, eth, msg):
         ofproto = switch.dp.ofproto
         parser = switch.dp.ofproto_parser
 
@@ -253,13 +250,13 @@ class FwSimpleSwitch13(app_manager.RyuApp):
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
                                              actions)]
 
-        match = parser.OFPMatch(eth_src=msg.match['eth_src'],
-                                eth_dst=msg.match['eth_dst'])
+        match = parser.OFPMatch(eth_src=eth.src,
+                                eth_dst=eth.dst)
         mod = parser.OFPFlowMod(datapath=switch.dp, priority=1,
                                 match=match, instructions=inst)
         switch.dp.send_msg(mod)
 
-        self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
+        #self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
 
         if srcSwitch.dp.id == switch.dp.id:
             data = None
