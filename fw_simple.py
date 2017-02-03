@@ -46,12 +46,12 @@ class FwSimpleSwitch13(app_manager.RyuApp):
     def __init__(self, *args, **kwargs):
         super(FwSimpleSwitch13, self).__init__(*args, **kwargs)
         self.logger.info("%s: Starting app", time.time())
-        self.next_array = []
+        #self.next_array = []
 
-        self.first_packet = 1
+        #self.first_packet = 1
 
-    def close(self):
-        hub.joinall(self.threads)
+    #def close(self):
+    #    hub.joinall(self.threads)
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -71,10 +71,9 @@ class FwSimpleSwitch13(app_manager.RyuApp):
                                           ofproto.OFPCML_NO_BUFFER)]
         self.add_flow(datapath, 0, match, actions)
 
-    @set_ev_cls(event.EventLinkAdd, CONFIG_DISPATCHER)
-    def new_link_handler(self, ev):
-        self.promptFW()
-
+    #@set_ev_cls(event.EventLinkAdd, CONFIG_DISPATCHER)
+    #def new_link_handler(self, ev):
+    #    self.promptFW()
 
     @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, CONFIG_DISPATCHER)
     def port_desc_handler(self, ev):
@@ -89,9 +88,9 @@ class FwSimpleSwitch13(app_manager.RyuApp):
         self.next_array = self.FloydWarshall(switches, links)
         self.disableProf(pr,start,"FW")
 
-    def repromptFW(self):
-        self.promptFW()
-        self.threads.append(hub.spawn_after(5, self.repromptFW))
+    #def repromptFW(self):
+    #    self.promptFW()
+    #    self.threads.append(hub.spawn_after(5, self.repromptFW))
 
     def add_flow(self, datapath, priority, match, actions, buffer_id=None):
         ofproto = datapath.ofproto
@@ -128,9 +127,9 @@ class FwSimpleSwitch13(app_manager.RyuApp):
         pr,start = self.enableProf()
 
         # After the first packet in, start allowing FW to monitor link delays
-        if self.first_packet == 1:
-            self.threads.append(hub.spawn_after(5, self.repromptFW))
-            self.first_packet = 0
+        #if self.first_packet == 1:
+        #    self.threads.append(hub.spawn_after(5, self.repromptFW))
+        #    self.first_packet = 0
         
         # Figure out environment
         links = api.get_all_link(self)
@@ -178,7 +177,7 @@ class FwSimpleSwitch13(app_manager.RyuApp):
         dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
 
         sdnNix = []
-        self.BuildNixVector (srcSwitch, dstSwitch, links, sdnNix)
+        self.BuildNixVector (srcSwitch, dstSwitch, switches, links, sdnNix)
 
         # Need to send to last switch to send out host port
         sdnNix.append((dstSwitch, dstNode.port.port_no))
@@ -223,11 +222,12 @@ class FwSimpleSwitch13(app_manager.RyuApp):
                     #self.logger.info("%s: Sending ARP Reply: dpid=%s, ip=%s, port=%s", time.time(), switch.dp.id, dst_ip, host.port.port_no)
                     switch.dp.send_msg(out)
     
-    def BuildNixVector (self, srcSwitch, dstSwitch, links, sdnNix):
+    def BuildNixVector (self, srcSwitch, dstSwitch, switches, links, sdnNix):
         if srcSwitch == dstSwitch:
             return True
 
-        temp_next = copy.deepcopy(self.next_array)
+        #temp_next = copy.deepcopy(self.next_array)
+        temp_next = self.FloydWarshall(switches, links)
         src = srcSwitch.dp.id
         dst = dstSwitch.dp.id
         if temp_next[src][dst] == None:
