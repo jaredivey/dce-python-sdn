@@ -281,7 +281,7 @@ class FwSimpleSwitch13(app_manager.RyuApp):
                                 match=match, instructions=inst)
         switch.dp.send_msg(mod)
 
-        self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
+        #self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
 
         if srcSwitch.dp.id == switch.dp.id:
             data = None
