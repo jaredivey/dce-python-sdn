@@ -29,11 +29,13 @@ from ryu.controller import ofp_event
 from ryu.controller.handler import CONFIG_DISPATCHER, MAIN_DISPATCHER
 from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
+from ryu.lib import hub
 from ryu.lib.packet import packet
 from ryu.lib.packet import ethernet, arp, ipv4
 from ryu.lib.packet import ether_types
 import ryu.topology.api as api
 import ryu.topology.event as event
+import copy
 import numpy
 
 import time, cProfile, pstats, StringIO
@@ -45,6 +47,11 @@ class FwSimpleSwitch13(app_manager.RyuApp):
         super(FwSimpleSwitch13, self).__init__(*args, **kwargs)
         self.logger.info("%s: Starting app", time.time())
         self.next_array = []
+
+        self.first_packet = 1
+
+    def close(self):
+        hub.joinall(self.threads)
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
@@ -66,6 +73,14 @@ class FwSimpleSwitch13(app_manager.RyuApp):
 
     @set_ev_cls(event.EventLinkAdd, CONFIG_DISPATCHER)
     def new_link_handler(self, ev):
+        self.promptFW()
+
+
+    @set_ev_cls(ofp_event.EventOFPPortDescStatsReply, CONFIG_DISPATCHER)
+    def port_desc_handler(self, ev):
+        self.logger.info("PORTDESC")
+
+    def promptFW (self):
         pr,start = self.enableProf()
 
         links = api.get_all_link(self)
@@ -73,6 +88,10 @@ class FwSimpleSwitch13(app_manager.RyuApp):
 
         self.next_array = self.FloydWarshall(switches, links)
         self.disableProf(pr,start,"FW")
+
+    def repromptFW(self):
+        self.promptFW()
+        self.threads.append(hub.spawn_after(5, self.repromptFW))
 
     def add_flow(self, datapath, priority, match, actions, buffer_id=None):
         ofproto = datapath.ofproto
@@ -91,7 +110,6 @@ class FwSimpleSwitch13(app_manager.RyuApp):
 
     @set_ev_cls(ofp_event.EventOFPPacketIn, MAIN_DISPATCHER)
     def _packet_in_handler(self, ev):
-        
         # If you hit this you might want to increase
         # the "miss_send_length" of your switch
         if ev.msg.msg_len < ev.msg.total_len:
@@ -108,6 +126,11 @@ class FwSimpleSwitch13(app_manager.RyuApp):
             # ignore lldp packet
             return
         pr,start = self.enableProf()
+
+        # After the first packet in, start allowing FW to monitor link delays
+        if self.first_packet == 1:
+            self.threads.append(hub.spawn_after(5, self.repromptFW))
+            self.first_packet = 0
         
         # Figure out environment
         links = api.get_all_link(self)
@@ -130,8 +153,8 @@ class FwSimpleSwitch13(app_manager.RyuApp):
         # Start nix vector code
         src_ip = ''
         dst_ip = ''
-        srcNode = ''
-        dstNode = ''
+        srcNode = None
+        dstNode = None
         if eth.ethertype == ether_types.ETH_TYPE_ARP:
             arp_pkt = pkt.get_protocols(arp.arp)[0]
             src_ip = arp_pkt.src_ip
@@ -160,7 +183,7 @@ class FwSimpleSwitch13(app_manager.RyuApp):
         # Need to send to last switch to send out host port
         sdnNix.append((dstSwitch, dstNode.port.port_no))
         
-        for curNix in sdnNix:
+        for curNix in reversed(sdnNix):
             self.sendNixRules (srcSwitch, curNix[0], curNix[1], eth, msg)
         self.disableProf(pr,start,"COMPLETION")
         
@@ -203,17 +226,19 @@ class FwSimpleSwitch13(app_manager.RyuApp):
     def BuildNixVector (self, srcSwitch, dstSwitch, links, sdnNix):
         if srcSwitch == dstSwitch:
             return True
+
+        temp_next = copy.deepcopy(self.next_array)
         src = srcSwitch.dp.id
         dst = dstSwitch.dp.id
-        if self.next_array[src][dst] == None:
+        if temp_next[src][dst] == None:
             return False
 
         while src != dst:
             currSwitch = api.get_switch(self, src)[0]
             for link in links:
-                if link.src.dpid == currSwitch.dp.id and link.dst.dpid == self.next_array[src][dst]:
+                if link.src.dpid == currSwitch.dp.id and link.dst.dpid == temp_next[src][dst]:
                     sdnNix.append((currSwitch, link.src.port_no))
-                    src = self.next_array[src][dst]
+                    src = temp_next[src][dst]
                     break
                 
         return True
@@ -256,7 +281,7 @@ class FwSimpleSwitch13(app_manager.RyuApp):
                                 match=match, instructions=inst)
         switch.dp.send_msg(mod)
 
-        #self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
+        self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
 
         if srcSwitch.dp.id == switch.dp.id:
             data = None
