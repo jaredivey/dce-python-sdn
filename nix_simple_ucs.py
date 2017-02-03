@@ -156,7 +156,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         sdnNix.insert(0, (srcSwitch, srcNode.port.port_no))
         
         for curNix in sdnNix:
-            self.sendNixRules (dstSwitch, curNix[0], curNix[1], eth_dst, eth_src, msg, False)
+            self.sendNixRules (dstSwitch, curNix[0], curNix[1], eth.dst, eth.src, msg, False)
 
         parentVec = {}
         foundIt = self.UCS (srcSwitch, dstSwitch, links, switches, parentVec)
@@ -170,7 +170,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         sdnNix.insert(0, (dstSwitch, dstNode.port.port_no))
         
         for curNix in sdnNix:
-            self.sendNixRules (srcSwitch, curNix[0], curNix[1], eth_src, eth_dst, msg)
+            self.sendNixRules (srcSwitch, curNix[0], curNix[1], eth.src, eth.dst, msg)
 
         self.disableProf(pr,start,"COMPLETION")
         
