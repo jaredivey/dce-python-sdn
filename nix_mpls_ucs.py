@@ -310,7 +310,7 @@ class NixMpls13(app_manager.RyuApp):
         #self.logger.info("SDN Nix: %s", sdnNix)
         return self.BuildNixVector(parentVector, srcSwitch, parentSwitch, links, switches, hosts, nixVector, sdnNix)
     
-    def sendNixPacket(self, ofproto, parser, srcSwitch, sdnNix, msg, src_ip, dst_ip, po=False):
+    def sendNixPacket(self, ofproto, parser, srcSwitch, sdnNix, msg, src_ip, dst_ip, po=True):
         actions = []
         out_port = 0
         first = 1        
