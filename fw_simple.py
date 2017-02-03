@@ -176,14 +176,26 @@ class FwSimpleSwitch13(app_manager.RyuApp):
         srcSwitch = [switch for switch in switches if switch.dp.id == srcNode.port.dpid][0]
         dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
 
+        next_array = self.FloydWarshall(switches, links)
+
+        # Send reverse path first to limit requests to controller
         sdnNix = []
-        self.BuildNixVector (srcSwitch, dstSwitch, switches, links, sdnNix)
+        self.BuildNixVector (dstSwitch, srcSwitch, switches, links, next_array, sdnNix)
+
+        # Need to send to last switch to send out host port
+        sdnNix.append((srcSwitch, srcNode.port.port_no))
+        
+        for curNix in reversed(sdnNix):
+            self.sendNixRules (dstSwitch, curNix[0], curNix[1], eth.dst, eth.src, msg, False)
+
+        sdnNix = []
+        self.BuildNixVector (srcSwitch, dstSwitch, switches, links, next_array, sdnNix)
 
         # Need to send to last switch to send out host port
         sdnNix.append((dstSwitch, dstNode.port.port_no))
         
         for curNix in reversed(sdnNix):
-            self.sendNixRules (srcSwitch, curNix[0], curNix[1], eth, msg)
+            self.sendNixRules (srcSwitch, curNix[0], curNix[1], eth.src, eth.dst, msg)
         self.disableProf(pr,start,"COMPLETION")
         
     def ArpProxy (self, data, datapath, in_port, links, switches, hosts):
@@ -222,23 +234,22 @@ class FwSimpleSwitch13(app_manager.RyuApp):
                     #self.logger.info("%s: Sending ARP Reply: dpid=%s, ip=%s, port=%s", time.time(), switch.dp.id, dst_ip, host.port.port_no)
                     switch.dp.send_msg(out)
     
-    def BuildNixVector (self, srcSwitch, dstSwitch, switches, links, sdnNix):
+    def BuildNixVector (self, srcSwitch, dstSwitch, switches, links, next_array, sdnNix):
         if srcSwitch == dstSwitch:
             return True
 
         #temp_next = copy.deepcopy(self.next_array)
-        temp_next = self.FloydWarshall(switches, links)
         src = srcSwitch.dp.id
         dst = dstSwitch.dp.id
-        if temp_next[src][dst] == None:
+        if next_array[src][dst] == None:
             return False
 
         while src != dst:
             currSwitch = api.get_switch(self, src)[0]
             for link in links:
-                if link.src.dpid == currSwitch.dp.id and link.dst.dpid == temp_next[src][dst]:
+                if link.src.dpid == currSwitch.dp.id and link.dst.dpid == next_array[src][dst]:
                     sdnNix.append((currSwitch, link.src.port_no))
-                    src = temp_next[src][dst]
+                    src = next_array[src][dst]
                     break
                 
         return True
@@ -267,7 +278,7 @@ class FwSimpleSwitch13(app_manager.RyuApp):
                         next_array[i][j] = next_array[i][k]
         return next_array
 
-    def sendNixRules(self, srcSwitch, switch, port_no, eth, msg):
+    def sendNixRules(self, srcSwitch, switch, port_no, eth_src, eth_dst, msg, po=True):
         ofproto = switch.dp.ofproto
         parser = switch.dp.ofproto_parser
 
@@ -275,15 +286,15 @@ class FwSimpleSwitch13(app_manager.RyuApp):
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
                                              actions)]
 
-        match = parser.OFPMatch(eth_src=eth.src,
-                                eth_dst=eth.dst)
+        match = parser.OFPMatch(eth_src=eth_src,
+                                eth_dst=eth_dst)
         mod = parser.OFPFlowMod(datapath=switch.dp, priority=1,
                                 match=match, instructions=inst)
         switch.dp.send_msg(mod)
 
         #self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
 
-        if srcSwitch.dp.id == switch.dp.id:
+        if po == True and srcSwitch.dp.id == switch.dp.id:
             data = None
 
             if msg.buffer_id == ofproto.OFP_NO_BUFFER:
