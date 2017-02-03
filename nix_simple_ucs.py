@@ -142,6 +142,22 @@ class NixSimpleSwitch13(app_manager.RyuApp):
                     
         srcSwitch = [switch for switch in switches if switch.dp.id == srcNode.port.dpid][0]
         dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
+
+        # Send reverse path first
+        parentVec = {}
+        foundIt = self.UCS (dstSwitch, srcSwitch, links, switches, parentVec)
+        
+        sdnNix = []
+        nixVector = []
+        if foundIt:
+            self.BuildNixVector (parentVec, dstSwitch, srcSwitch, links, switches, hosts, nixVector, sdnNix)
+
+        # Need to send to last switch to send out host port
+        sdnNix.insert(0, (srcSwitch, srcNode.port.port_no))
+        
+        for curNix in sdnNix:
+            self.sendNixRules (dstSwitch, curNix[0], curNix[1], eth_dst, eth_src, msg, False)
+
         parentVec = {}
         foundIt = self.UCS (srcSwitch, dstSwitch, links, switches, parentVec)
         
@@ -154,7 +170,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         sdnNix.insert(0, (dstSwitch, dstNode.port.port_no))
         
         for curNix in sdnNix:
-            self.sendNixRules (srcSwitch, curNix[0], curNix[1], eth, msg)
+            self.sendNixRules (srcSwitch, curNix[0], curNix[1], eth_src, eth_dst, msg)
 
         self.disableProf(pr,start,"COMPLETION")
         
@@ -249,7 +265,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         #self.logger.info("SDN Nix: %s", sdnNix)
         return self.BuildNixVector(parentVector, srcSwitch, parentSwitch, links, switches, hosts, nixVector, sdnNix)
     
-    def sendNixRules(self, srcSwitch, switch, port_no, eth, msg):
+    def sendNixRules(self, srcSwitch, switch, port_no, eth_src, eth_dst, msg, po=True):
         ofproto = switch.dp.ofproto
         parser = switch.dp.ofproto_parser
 
@@ -257,15 +273,15 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         inst = [parser.OFPInstructionActions(ofproto.OFPIT_APPLY_ACTIONS,
                                              actions)]
         
-        match = parser.OFPMatch(eth_src=eth.src,
-                                eth_dst=eth.dst)
+        match = parser.OFPMatch(eth_src=eth_src,
+                                eth_dst=eth_dst)
         mod = parser.OFPFlowMod(datapath=switch.dp, priority=1,
                                 match=match, instructions=inst)
         switch.dp.send_msg(mod)
                     
         #self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
         
-        if srcSwitch == switch:
+        if po == True and srcSwitch == switch:
             data = None
         
             if msg.buffer_id == ofproto.OFP_NO_BUFFER:

@@ -193,8 +193,21 @@ class NixMpls13(app_manager.RyuApp):
             return
         srcSwitch = [switch for switch in switches if switch.dp.id == srcNode.port.dpid][0]
         dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
+
+        # Send reverse path first
         parentVec = {}
-        foundIt = self.UCS (srcSwitch, dstSwitch, links, switches, parentVec)
+        foundIt = self.BFS (dstSwitch, srcSwitch, links, switches, parentVec)
+        
+        sdnNix = []
+        nixVector = []
+        if foundIt:
+            self.BuildNixVector (parentVec, dstSwitch, srcSwitch, links, switches, hosts, nixVector, sdnNix)
+            
+            sdnNix.insert(0, (srcSwitch, srcNode.port.port_no))
+            self.sendNixPacket (ofproto, parser, dstSwitch, sdnNix, msg, dst_ip, src_ip, False)
+
+        parentVec = {}
+        foundIt = self.BFS (srcSwitch, dstSwitch, links, switches, parentVec)
         
         sdnNix = []
         nixVector = []
@@ -297,7 +310,7 @@ class NixMpls13(app_manager.RyuApp):
         #self.logger.info("SDN Nix: %s", sdnNix)
         return self.BuildNixVector(parentVector, srcSwitch, parentSwitch, links, switches, hosts, nixVector, sdnNix)
     
-    def sendNixPacket(self, ofproto, parser, srcSwitch, sdnNix, msg, src_ip, dst_ip):
+    def sendNixPacket(self, ofproto, parser, srcSwitch, sdnNix, msg, src_ip, dst_ip, po=False):
         actions = []
         out_port = 0
         first = 1        
@@ -322,14 +335,15 @@ class NixMpls13(app_manager.RyuApp):
                                 match=match, instructions=inst)
         srcSwitch.dp.send_msg(mod)
         
-        data = None
-        if msg.buffer_id == ofproto.OFP_NO_BUFFER:
-            data = msg.data
+        if po == True:
+            data = None
+            if msg.buffer_id == ofproto.OFP_NO_BUFFER:
+                data = msg.data
 
-        out = parser.OFPPacketOut(datapath=srcSwitch.dp, buffer_id=msg.buffer_id,
-                                  in_port=msg.match['in_port'],
-                                  actions=actions, data=data)
-        srcSwitch.dp.send_msg(out)
+            out = parser.OFPPacketOut(datapath=srcSwitch.dp, buffer_id=msg.buffer_id,
+                                      in_port=msg.match['in_port'],
+                                      actions=actions, data=data)
+            srcSwitch.dp.send_msg(out)
         
     def bin(self, s):
         return str(s) if s<=1 else bin(s>>1) + str(s&1)
