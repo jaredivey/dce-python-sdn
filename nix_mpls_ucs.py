@@ -196,7 +196,7 @@ class NixMpls13(app_manager.RyuApp):
 
         # Send reverse path first
         parentVec = {}
-        foundIt = self.BFS (dstSwitch, srcSwitch, links, switches, parentVec)
+        foundIt = self.UCS (dstSwitch, srcSwitch, links, switches, parentVec)
         
         sdnNix = []
         nixVector = []
@@ -207,7 +207,7 @@ class NixMpls13(app_manager.RyuApp):
             self.sendNixPacket (ofproto, parser, dstSwitch, sdnNix, msg, dst_ip, src_ip, False)
 
         parentVec = {}
-        foundIt = self.BFS (srcSwitch, dstSwitch, links, switches, parentVec)
+        foundIt = self.UCS (srcSwitch, dstSwitch, links, switches, parentVec)
         
         sdnNix = []
         nixVector = []
