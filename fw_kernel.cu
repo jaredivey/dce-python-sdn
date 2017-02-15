@@ -1,3 +1,7 @@
+/*
+ * /usr/local/cuda/bin/nvcc -gencode arch=compute_20,code=compute_20 -o fw_kernel.ptx -ptx fw_kernel.cu 
+ */
+
 extern "C" {
 #include <math.h>
 

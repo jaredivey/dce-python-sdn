@@ -298,10 +298,10 @@ class NixSimpleSwitch13(app_manager.RyuApp):
     def enableProf(self):
         pr = cProfile.Profile()
         pr.enable()
-        return pr,time.clock()
+        return pr,time.time()
 
     def disableProf(self, pr, start, whichcase):
-        completion = time.clock() - start
+        completion = time.time() - start
         pr.disable()
         s = StringIO.StringIO()
         ps = pstats.Stats(pr, stream=s)

@@ -266,7 +266,7 @@ class FwSimpleSwitch13(app_manager.RyuApp):
             return False
 
         while src != dst:
-            currSwitch = api.get_switch(self, src)[0]
+            currSwitch = [switch for switch in switches if src == switch.dp.id][0]
             for link in links:
                 if link.src.dpid == currSwitch.dp.id and link.dst.dpid == next_array[src][dst]:
                     sdnNix.append((currSwitch, link.src.port_no))
@@ -339,10 +339,10 @@ class FwSimpleSwitch13(app_manager.RyuApp):
     def enableProf(self):
         pr = cProfile.Profile()
         pr.enable()
-        return pr,time.clock()
+        return pr,time.time()
 
     def disableProf(self, pr, start, whichcase):
-        completion = time.clock() - start
+        completion = time.time() - start
         pr.disable()
         s = StringIO.StringIO()
         ps = pstats.Stats(pr, stream=s)
