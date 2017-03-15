@@ -148,9 +148,12 @@ class NixSimpleSwitch13(app_manager.RyuApp):
         dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
 
         # Send reverse path first
+        #alg_pr,alg_start = self.enableProf()
         parentVec = {}
         foundIt = self.BFS (dstSwitch, srcSwitch, links, switches, parentVec)
+        #self.disableProf(alg_pr,alg_start,"RVS_ALG")
         
+        #rvs_pr,rvs_start = self.enableProf()
         sdnNix = []
         nixVector = []
         if foundIt:
@@ -158,13 +161,17 @@ class NixSimpleSwitch13(app_manager.RyuApp):
 
         # Need to send to last switch to send out host port
         sdnNix.insert(0, (srcSwitch, srcNode.port.port_no))
+        #self.disableProf(rvs_pr,rvs_start,"RVS_PATH")
         
         for curNix in sdnNix:
             self.sendNixRules (dstSwitch, curNix[0], curNix[1], eth.dst, eth.src, msg, False)
 
+        #alg_pr,alg_start = self.enableProf()
         parentVec = {}
         foundIt = self.BFS (srcSwitch, dstSwitch, links, switches, parentVec)
+        #self.disableProf(alg_pr,alg_start,"FWD_ALG")
         
+        #fwd_pr,fwd_start = self.enableProf()
         sdnNix = []
         nixVector = []
         if foundIt:
@@ -172,6 +179,7 @@ class NixSimpleSwitch13(app_manager.RyuApp):
 
         # Need to send to last switch to send out host port
         sdnNix.insert(0, (dstSwitch, dstNode.port.port_no))
+        #self.disableProf(fwd_pr,fwd_start,"FWD_PATH")
         
         for curNix in sdnNix:
             self.sendNixRules (srcSwitch, curNix[0], curNix[1], eth.src, eth.dst, msg)

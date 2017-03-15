@@ -176,23 +176,29 @@ class FwSimpleSwitch13(app_manager.RyuApp):
         srcSwitch = [switch for switch in switches if switch.dp.id == srcNode.port.dpid][0]
         dstSwitch = [switch for switch in switches if switch.dp.id == dstNode.port.dpid][0]
 
+        #alg_pr,alg_start = self.enableProf()
         next_array = self.FloydWarshall(switches, links)
+        #self.disableProf(alg_pr,alg_start,"ALGORITHM")
 
         # Send reverse path first to limit requests to controller
+        #rvs_pr,rvs_start = self.enableProf()
         sdnNix = []
         self.BuildNixVector (dstSwitch, srcSwitch, switches, links, next_array, sdnNix)
 
         # Need to send to last switch to send out host port
         sdnNix.append((srcSwitch, srcNode.port.port_no))
+        #self.disableProf(rvs_pr,rvs_start,"RVS_PATH")
         
         for curNix in reversed(sdnNix):
             self.sendNixRules (dstSwitch, curNix[0], curNix[1], eth.dst, eth.src, msg, False)
 
+        #fwd_pr,fwd_start = self.enableProf()
         sdnNix = []
         self.BuildNixVector (srcSwitch, dstSwitch, switches, links, next_array, sdnNix)
 
         # Need to send to last switch to send out host port
         sdnNix.append((dstSwitch, dstNode.port.port_no))
+        #self.disableProf(fwd_pr,fwd_start,"FWD_PATH")
         
         for curNix in reversed(sdnNix):
             self.sendNixRules (srcSwitch, curNix[0], curNix[1], eth.src, eth.dst, msg)
@@ -291,7 +297,7 @@ class FwSimpleSwitch13(app_manager.RyuApp):
                                 match=match, instructions=inst)
         switch.dp.send_msg(mod)
 
-        self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
+        #self.logger.info("%s: Sending Nix rule: dpid=%s, port=%s", time.time(), switch.dp.id, port_no)
 
         if po == True and srcSwitch.dp.id == switch.dp.id:
             data = None
