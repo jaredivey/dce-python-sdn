@@ -1,0 +1,327 @@
+diff -r a06454b1afa1 Lib/posixpath.py
+--- a/Lib/posixpath.py	Sat Dec 17 12:00:35 2016 -0800
++++ b/Lib/posixpath.py	Fri Apr 07 11:57:14 2017 -0400
+@@ -259,7 +259,7 @@
+     if i == 1:
+         if 'HOME' not in os.environ:
+             import pwd
+-            userhome = pwd.getpwuid(os.getuid()).pw_dir
++            userhome = '/' #pwd.getpwuid(os.getuid()).pw_dir
+         else:
+             userhome = os.environ['HOME']
+     else:
+diff -r a06454b1afa1 Makefile.pre.in
+--- a/Makefile.pre.in	Sat Dec 17 12:00:35 2016 -0800
++++ b/Makefile.pre.in	Fri Apr 07 11:57:14 2017 -0400
+@@ -559,7 +559,7 @@
+ 	$(AR) $(ARFLAGS) $@ $(MODOBJS)
+ 	$(RANLIB) $@
+ 
+-libpython$(VERSION).so: $(LIBRARY_OBJS)
++libpython$(VERSION)_ns3.so: $(LIBRARY_OBJS)
+ 	if test $(INSTSONAME) != $(LDLIBRARY); then \
+ 		$(BLDSHARED) -Wl,-h$(INSTSONAME) -o $(INSTSONAME) $(LIBRARY_OBJS) $(MODLIBS) $(SHLIBS) $(LIBC) $(LIBM) $(LDLAST); \
+ 		$(LN) -f $(INSTSONAME) $@; \
+@@ -1048,6 +1048,12 @@
+ 		encodings compiler hotshot \
+ 		email email/mime email/test email/test/data \
+ 		ensurepip ensurepip/_bundled \
++        setuptools setuptools/command setuptools/extern \
++        pkg_resources \
++        pkg_resources/_vendor pkg_resources/_vendor/packaging pkg_resources/extern \
++		eventlet \
++		eventlet/green eventlet/green/http eventlet/green/OpenSSL eventlet/green/urllib \
++		eventlet/greenio eventlet/hubs eventlet/support \
+ 		json json/tests \
+ 		sqlite3 sqlite3/test \
+ 		logging bsddb bsddb/test csv importlib wsgiref \
+@@ -1057,6 +1063,12 @@
+ 		idlelib idlelib/Icons idlelib/idle_test \
+ 		distutils distutils/command distutils/tests $(XMLLIBSUBDIRS) \
+ 		multiprocessing multiprocessing/dummy \
++		netaddr netaddr/eui netaddr/ip netaddr/strategy netaddr/tools \
++		oslo_config routes webob \
++		repoze repoze/lru \
++		markupsafe \
++		mako mako/ext \
++		pytools tinyrpc tinyrpc/dispatch tinyrpc/protocols tinyrpc/server tinyrpc/transports \
+ 		unittest unittest/test \
+ 		lib-old \
+ 		curses pydoc_data $(MACHDEPS)
+diff -r a06454b1afa1 Modules/Setup.dist
+--- a/Modules/Setup.dist	Sat Dec 17 12:00:35 2016 -0800
++++ b/Modules/Setup.dist	Fri Apr 07 11:57:14 2017 -0400
+@@ -163,77 +163,77 @@
+ # it, depending on your system -- see the GNU readline instructions.
+ # It's okay for this to be a shared library, too.
+ 
+-#readline readline.c -lreadline -ltermcap
++readline readline.c -lreadline -ltermcap
+ 
+ 
+ # Modules that should always be present (non UNIX dependent):
+ 
+-#array arraymodule.c	# array objects
+-#cmath cmathmodule.c _math.c # -lm # complex math library functions
+-#math mathmodule.c _math.c # -lm # math library functions, e.g. sin()
+-#_struct _struct.c	# binary structure packing/unpacking
+-#time timemodule.c # -lm # time operations and variables
+-#operator operator.c	# operator.add() and similar goodies
++array arraymodule.c	# array objects
++cmath cmathmodule.c _math.c # -lm # complex math library functions
++math mathmodule.c _math.c -lm # math library functions, e.g. sin()
++_struct _struct.c	# binary structure packing/unpacking
++time timemodule.c # time operations and variables
++operator operator.c	# operator.add() and similar goodies
+ #_testcapi _testcapimodule.c    # Python C API test module
+-#_random _randommodule.c	# Random number generator
+-#_collections _collectionsmodule.c # Container types
+-#_heapq _heapqmodule.c		# Heapq type
+-#itertools itertoolsmodule.c	# Functions creating iterators for efficient looping 
+-#strop stropmodule.c		# String manipulations
+-#_functools _functoolsmodule.c	# Tools for working with functions and callable objects
+-#_elementtree -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DUSE_PYEXPAT_CAPI _elementtree.c	# elementtree accelerator
++_random _randommodule.c	# Random number generator
++_collections _collectionsmodule.c # Container types
++_heapq _heapqmodule.c		# Heapq type
++itertools itertoolsmodule.c	# Functions creating iterators for efficient looping 
++strop stropmodule.c		# String manipulations
++_functools _functoolsmodule.c	# Tools for working with functions and callable objects
++_elementtree -I$(srcdir)/Modules/expat -DHAVE_EXPAT_CONFIG_H -DUSE_PYEXPAT_CAPI _elementtree.c	# elementtree accelerator
+ #_pickle _pickle.c	# pickle accelerator
+-#datetime datetimemodule.c	# date/time type
+-#_bisect _bisectmodule.c	# Bisection algorithms
++datetime datetimemodule.c	# date/time type
++_bisect _bisectmodule.c	# Bisection algorithms
+ 
+-#unicodedata unicodedata.c    # static Unicode character database
++unicodedata unicodedata.c    # static Unicode character database
+ 
+ # access to ISO C locale support
+-#_locale _localemodule.c  # -lintl
++_locale _localemodule.c  # -lintl
+ 
+ # Standard I/O baseline
+-#_io -I$(srcdir)/Modules/_io _io/bufferedio.c _io/bytesio.c _io/fileio.c _io/iobase.c _io/_iomodule.c _io/stringio.c _io/textio.c
++_io -I$(srcdir)/Modules/_io _io/bufferedio.c _io/bytesio.c _io/fileio.c _io/iobase.c _io/_iomodule.c _io/stringio.c _io/textio.c
+ 
+ 
+ # Modules with some UNIX dependencies -- on by default:
+ # (If you have a really backward UNIX, select and socket may not be
+ # supported...)
+ 
+-#fcntl fcntlmodule.c	# fcntl(2) and ioctl(2)
+-#spwd spwdmodule.c		# spwd(3) 
+-#grp grpmodule.c		# grp(3)
+-#select selectmodule.c	# select(2); not on ancient System V
++fcntl fcntlmodule.c	# fcntl(2) and ioctl(2)
++spwd spwdmodule.c		# spwd(3) 
++grp grpmodule.c		# grp(3)
++select selectmodule.c	# select(2); not on ancient System V
+ 
+ # Memory-mapped files (also works on Win32).
+-#mmap mmapmodule.c
++mmap mmapmodule.c
+ 
+ # CSV file helper
+-#_csv _csv.c
++_csv _csv.c
+ 
+ # Socket module helper for socket(2)
+-#_socket socketmodule.c timemodule.c
++_socket socketmodule.c timemodule.c
+ 
+ # Socket module helper for SSL support; you must comment out the other
+ # socket line above, and possibly edit the SSL variable:
+ #SSL=/usr/local/ssl
+-#_ssl _ssl.c \
+-#	-DUSE_SSL -I$(SSL)/include -I$(SSL)/include/openssl \
+-#	-L$(SSL)/lib -lssl -lcrypto
++_ssl _ssl.c \
++	-DUSE_SSL -I/usr/include -I/usr/include/openssl -I/usr/include/x86_64-linux-gnu \
++	-L/usr/lib -lssl -lcrypto
+ 
+ # The crypt module is now disabled by default because it breaks builds
+ # on many systems (where -lcrypt is needed), e.g. Linux (I believe).
+ #
+ # First, look at Setup.config; configure may have set this for you.
+ 
+-#crypt cryptmodule.c # -lcrypt	# crypt(3); needs -lcrypt on some systems
++crypt cryptmodule.c -lcrypt	# crypt(3); needs -lcrypt on some systems
+ 
+ 
+ # Some more UNIX dependent modules -- off by default, since these
+ # are not supported by all UNIX systems:
+ 
+ #nis nismodule.c -lnsl	# Sun yellow pages -- not everywhere
+-#termios termios.c	# Steen Lumholt's termios module
+-#resource resource.c	# Jeremy Hylton's rlimit interface
++termios termios.c	# Steen Lumholt's termios module
++resource resource.c	# Jeremy Hylton's rlimit interface
+ 
+ 
+ # Multimedia modules -- off by default.
+@@ -252,14 +252,14 @@
+ # Message-Digest Algorithm, described in RFC 1321.  The necessary files
+ # md5.c and md5.h are included here.
+ 
+-#_md5 md5module.c md5.c
++_md5 md5module.c md5.c
+ 
+ 
+ # The _sha module implements the SHA checksum algorithms.
+ # (NIST's Secure Hash Algorithms.)
+-#_sha shamodule.c
+-#_sha256 sha256module.c
+-#_sha512 sha512module.c
++_sha shamodule.c
++_sha256 sha256module.c
++_sha512 sha512module.c
+ 
+ 
+ # SGI IRIX specific modules -- off by default.
+@@ -434,14 +434,14 @@
+ 
+ 
+ # Helper module for various ascii-encoders
+-#binascii binascii.c
++binascii binascii.c
+ 
+ # Fred Drake's interface to the Python parser
+-#parser parsermodule.c
++parser parsermodule.c
+ 
+ # cStringIO and cPickle
+-#cStringIO cStringIO.c
+-#cPickle cPickle.c
++cStringIO cStringIO.c
++cPickle cPickle.c
+ 
+ 
+ # Lee Busby's SIGFPE modules.
+@@ -464,7 +464,7 @@
+ # Andrew Kuchling's zlib module.
+ # This require zlib 1.1.3 (or later).
+ # See http://www.gzip.org/zlib/
+-#zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
++zlib zlibmodule.c -I$(prefix)/include -L$(exec_prefix)/lib -lz
+ 
+ # Interface to the Expat XML parser
+ #
+@@ -497,3 +497,39 @@
+ 
+ # Another example -- the 'xxsubtype' module shows C-level subtyping in action
+ xxsubtype xxsubtype.c
++
++# Greenlet module
++greenlet greenlet/greenlet.c
++
++# _ctypes builtin
++_ctypes _ctypes/_ctypes.c _ctypes/callbacks.c _ctypes/callproc.c _ctypes/stgdict.c _ctypes/cfield.c -I$(srcdir)/Include -I$(srcdir)/Modules/_ctypes -I$(srcdir)/Modules/_ctypes/libffi/x86_64-unknown-linux-gnu/include -L$(srcdir)/Modules/_ctypes/libffi/lib -L/usr/lib/x86_64-linux-gnu -lffi
++
++# _hashlib builtin
++_hashlib _hashopenssl.c -I/usr/include -L/usr/lib -lssl -lcrypto
++
++# future_builtins builtin
++future_builtins future_builtins.c
++
++# Numpy modules
++multiarray numpy/core/src/multiarray/alloc.c numpy/core/src/multiarray/array_assign.c numpy/core/src/multiarray/array_assign_array.c numpy/core/src/multiarray/array_assign_scalar.c numpy/core/src/multiarray/arrayobject.c numpy/core/src/multiarray/arraytypes.c numpy/core/src/multiarray/buffer.c numpy/core/src/multiarray/calculation.c numpy/core/src/multiarray/common.c numpy/core/src/multiarray/compiled_base.c numpy/core/src/multiarray/conversion_utils.c numpy/core/src/multiarray/convert.c numpy/core/src/multiarray/convert_datatype.c numpy/core/src/multiarray/ctors.c numpy/core/src/multiarray/datetime.c numpy/core/src/multiarray/datetime_busday.c numpy/core/src/multiarray/datetime_busdaycal.c numpy/core/src/multiarray/datetime_strings.c numpy/core/src/multiarray/descriptor.c numpy/core/src/multiarray/dtype_transfer.c numpy/core/src/multiarray/einsum.c numpy/core/src/multiarray/flagsobject.c numpy/core/src/multiarray/getset.c numpy/core/src/multiarray/hashdescr.c numpy/core/src/multiarray/item_selection.c numpy/core/src/multiarray/iterators.c numpy/core/src/multiarray/lowlevel_strided_loops.c numpy/core/src/multiarray/mapping.c numpy/core/src/multiarray/methods.c numpy/core/src/multiarray/multiarraymodule.c numpy/core/src/multiarray/nditer_api.c numpy/core/src/multiarray/nditer_constr.c numpy/core/src/multiarray/nditer_pywrap.c numpy/core/src/multiarray/nditer_templ.c numpy/core/src/multiarray/number.c numpy/core/src/multiarray/numpymemoryview.c numpy/core/src/multiarray/numpyos.c numpy/core/src/multiarray/refcount.c numpy/core/src/multiarray/scalarapi.c numpy/core/src/multiarray/scalartypes.c numpy/core/src/multiarray/sequence.c numpy/core/src/multiarray/shape.c numpy/core/src/multiarray/ucsnarrow.c numpy/core/src/multiarray/usertypes.c numpy/core/src/multiarray/vdot.c numpy/core/src/private/mem_overlap.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/multiarray -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath -lnpysort
++
++umath numpy/core/src/umath/loops.c numpy/core/src/umath/reduction.c numpy/core/src/umath/scalarmath.c numpy/core/src/umath/ufunc_object.c numpy/core/src/umath/ufunc_type_resolution.c numpy/core/src/umath/umathmodule.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/umath -I$(srcdir)/Modules/numpy/core/src/multiarray -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath -lnpysort
++
++fftpack_lite numpy/fft/fftpack_litemodule.c numpy/fft/fftpack.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/fft -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
++
++lapack_lite numpy/linalg/lapack_litemodule.c numpy/linalg/lapack_lite/python_xerbla.c numpy/linalg/lapack_lite/blas_lite.c numpy/linalg/lapack_lite/dlamch.c numpy/linalg/lapack_lite/dlapack_lite.c numpy/linalg/lapack_lite/f2c_lite.c numpy/linalg/lapack_lite/zlapack_lite.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite/linalg -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
++
++_umath_linalg numpy/linalg/umath_linalg.c numpy/linalg/lapack_lite/python_xerbla.c numpy/linalg/lapack_lite/blas_lite.c numpy/linalg/lapack_lite/dlamch.c numpy/linalg/lapack_lite/dlapack_lite.c numpy/linalg/lapack_lite/f2c_lite.c numpy/linalg/lapack_lite/zlapack_lite.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite/linalg -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private -L$(srcdir)/Modules/numpy/core/src/npylibs -lnpymath
++
++mtrand numpy/random/mtrand/distributions.c numpy/random/mtrand/initarray.c numpy/random/mtrand/randomkit.c numpy/random/mtrand/mtrand.c -I$(srcdir)/Include -I$(srcdir)/Modules/numpy/core/src/linalg/lapack_lite -I$(srcdir)/Modules/numpy/core/src/linalg/ -I$(srcdir)/Modules/numpy/core/include -I$(srcdir)/Modules/numpy/core/include/numpy -I$(srcdir)/Modules/numpy/core/src/private
++
++# _cudadriver module (PyCuda)
++_pvt_struct pycuda/wrapper/_pvt_struct_v2.cpp -I$(srcdir)/Include -I$(srcdir)/Modules/pycuda/wrapper -I$(srcdir)/Modules/numpy/core/include
++
++_cudadriver bpl_subset/libs/smart_ptr/src/sp_collector.cpp bpl_subset/libs/smart_ptr/src/sp_debug_hooks.cpp bpl_subset/libs/python/src/bpl_errors.cpp bpl_subset/libs/python/src/bpl_import.cpp bpl_subset/libs/python/src/long.cpp bpl_subset/libs/python/src/numeric.cpp bpl_subset/libs/python/src/object_operators.cpp bpl_subset/libs/python/src/slice.cpp bpl_subset/libs/python/src/tuple.cpp bpl_subset/libs/python/src/dict.cpp bpl_subset/libs/python/src/exec.cpp bpl_subset/libs/python/src/list.cpp bpl_subset/libs/python/src/module.cpp bpl_subset/libs/python/src/object_protocol.cpp bpl_subset/libs/python/src/str.cpp bpl_subset/libs/python/src/wrapper.cpp bpl_subset/libs/python/src/converter/arg_to_python_base.cpp bpl_subset/libs/python/src/converter/builtin_converters.cpp bpl_subset/libs/python/src/converter/from_python.cpp bpl_subset/libs/python/src/converter/registry.cpp bpl_subset/libs/python/src/converter/type_id.cpp bpl_subset/libs/python/src/object/class.cpp bpl_subset/libs/python/src/object/function.cpp bpl_subset/libs/python/src/object/inheritance.cpp bpl_subset/libs/python/src/object/life_support.cpp bpl_subset/libs/python/src/object/stl_iterator.cpp bpl_subset/libs/python/src/object/enum.cpp bpl_subset/libs/python/src/object/function_doc_signature.cpp bpl_subset/libs/python/src/object/iterator.cpp bpl_subset/libs/python/src/object/pickle_support.cpp bpl_subset/libs/system/src/error_code.cpp bpl_subset/libs/thread/src/bpl_future.cpp bpl_subset/libs/thread/src/tss_null.cpp bpl_subset/libs/thread/src/pthread/once.cpp bpl_subset/libs/thread/src/pthread/bpl_thread.cpp pycuda/cpp/cuda.cpp pycuda/cpp/bitlog.cpp pycuda/wrapper/wrap_cudadrv.cpp pycuda/wrapper/mempool.cpp pycuda/wrapper/wrap_curand.cpp -I/usr/local/cuda/include -I$(srcdir)/Include -I$(srcdir)/Modules/bpl_subset -I$(srcdir)/Modules/pycuda/cpp -I$(srcdir)/Modules/pycuda/wrapper -I$(srcdir)/Modules/numpy/core/include -L/usr/lib/x86_64-linux-gnu -lcuda -L/usr/local/cuda/lib64 -lcudart -lcurand
++
++# _lsprof builtin
++_lsprof _lsprof.c rotatingtree.c
++
++# _hotshot builtin
++_hotshot _hotshot.c
+diff -r a06454b1afa1 configure
+--- a/configure	Sat Dec 17 12:00:35 2016 -0800
++++ b/configure	Fri Apr 07 11:57:14 2017 -0400
+@@ -5268,7 +5268,7 @@
+ $as_echo_n "checking LIBRARY... " >&6; }
+ if test -z "$LIBRARY"
+ then
+-	LIBRARY='libpython$(VERSION).a'
++	LIBRARY='libpython$(VERSION)_ns3.a'
+ fi
+ { $as_echo "$as_me:${as_lineno-$LINENO}: result: $LIBRARY" >&5
+ $as_echo "$LIBRARY" >&6; }
+@@ -5440,8 +5440,8 @@
+ 	  INSTSONAME="$LDLIBRARY".$SOVERSION
+           ;;
+     Linux*|GNU*|NetBSD*|FreeBSD*|DragonFly*|OpenBSD*)
+-	  LDLIBRARY='libpython$(VERSION).so'
+-	  BLDLIBRARY='-L. -lpython$(VERSION)'
++	  LDLIBRARY='libpython$(VERSION)_ns3.so'
++	  BLDLIBRARY='-L. -lpython$(VERSION)_ns3'
+ 	  RUNSHARED=LD_LIBRARY_PATH=`pwd`${LD_LIBRARY_PATH:+:${LD_LIBRARY_PATH}}
+ 	  case $ac_sys_system in
+ 	      FreeBSD*)
+diff -r a06454b1afa1 setup.py
+--- a/setup.py	Sat Dec 17 12:00:35 2016 -0800
++++ b/setup.py	Fri Apr 07 11:57:14 2017 -0400
+@@ -299,9 +299,9 @@
+ 
+     def build_extension(self, ext):
+ 
+-        if ext.name == '_ctypes':
+-            if not self.configure_ctypes(ext):
+-                return
++        #if ext.name == '_ctypes':
++        #    if not self.configure_ctypes(ext):
++        #        return
+ 
+         try:
+             build_ext.build_extension(self, ext)
+@@ -607,7 +607,7 @@
+         exts.append( Extension("itertools", ["itertoolsmodule.c"]) )
+         # code that will be builtins in the future, but conflict with the
+         #  current builtins
+-        exts.append( Extension('future_builtins', ['future_builtins.c']) )
++        #exts.append( Extension('future_builtins', ['future_builtins.c']) )
+         # random number generator implemented in C
+         exts.append( Extension("_random", ["_randommodule.c"]) )
+         # high-performance collections
+@@ -631,8 +631,8 @@
+         exts.append( Extension('_testcapi', ['_testcapimodule.c'],
+                                depends=['testcapi_long.h']) )
+         # profilers (_lsprof is for cProfile.py)
+-        exts.append( Extension('_hotshot', ['_hotshot.c']) )
+-        exts.append( Extension('_lsprof', ['_lsprof.c', 'rotatingtree.c']) )
++        #exts.append( Extension('_hotshot', ['_hotshot.c']) )
++        #exts.append( Extension('_lsprof', ['_lsprof.c', 'rotatingtree.c']) )
+         # static Unicode character database
+         if have_unicode:
+             exts.append( Extension('unicodedata', ['unicodedata.c']) )
+@@ -1558,7 +1558,7 @@
+             missing.append('dl')
+ 
+         # Thomas Heller's _ctypes module
+-        self.detect_ctypes(inc_dirs, lib_dirs)
++        #self.detect_ctypes(inc_dirs, lib_dirs)
+ 
+         # Richard Oudkerk's multiprocessing module
+         if host_platform == 'win32':             # Windows
+@@ -2125,7 +2125,7 @@
+         if host_platform == 'darwin':
+             # OS X 10.5 comes with libffi.dylib; the include files are
+             # in /usr/include/ffi
+-            inc_dirs.append('/usr/include/ffi')
++            inc_dirs.append('/usr/include/x86_64-linux-gnu/ffi')
+ 
+         ffi_inc = [sysconfig.get_config_var("LIBFFI_INCLUDEDIR")]
+         if not ffi_inc or ffi_inc[0] == '':
